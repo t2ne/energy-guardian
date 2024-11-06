@@ -1,3 +1,5 @@
+//CÓDIGO SEM O JOGO NELE MAS STYLES ATUALIZADO
+
 // BootScene
 class BootScene extends Phaser.Scene {
     constructor() {
