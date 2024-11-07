@@ -21,10 +21,19 @@ class BootScene extends Phaser.Scene {
         this.load.image('obstacle', 'assets/etc/smoke.png');
         this.load.audio('collect', 'assets/sounds/coin.wav');
         this.load.audio('complete', 'assets/sounds/power_up.wav');
-        this.load.audio('backgroundMusic', 'assets/sounds/background.mp3'); // Added background music
-        this.load.audio('shootSound', 'assets/sounds/hurt.wav'); // Added shoot sound
+        this.load.audio('shootSound', 'assets/sounds/hurt.wav');
+
+        this.load.audio('level1-song', 'assets/music/level1.mp3');
+        this.load.audio('level2-song', 'assets/music/level2.mp3');
+        this.load.audio('level3-song', 'assets/music/level3.mp3');
+        this.load.audio('level4-song', 'assets/music/level4.mp3');
+
+        this.load.audio('ambient', 'assets/music/bgMusic.mp3');
 
         this.loadFont('PixelOperator8-Bold', 'assets/fonts/PixelOperator8-Bold.ttf');
+        
+
+        this.load.audio('backgroundMusic', 'assets/sounds/background.mp3');
     }
 
     create() {
@@ -95,6 +104,8 @@ class StartScreen extends BaseScene {
     create() {
         this.createBackground('bgInit', true);
         this.add.text(400, 100, 'Energy Guardian Adventure', this.applyFontStyle('30px')).setOrigin(0.5);
+
+        this.add.text(630, 585, 'António Rebelo - Nº28837', this.applyFontStyle('15px')).setOrigin(0.5);
 
         const buttons = [
             { text: 'Jogar', scene: 'LevelSelectScene' },
@@ -362,11 +373,11 @@ class GameScene extends Phaser.Scene {
 
     initGame(difficulty) {
         switch(difficulty) {
-            case 'Easy':
+            case 'Fácil':
                 this.obstacleSpeed = 100;
                 this.obstacleSpawnRate = 3000;
                 break;
-            case 'Hard':
+            case 'Difícil':
                 this.obstacleSpeed = 300;
                 this.obstacleSpawnRate = 1000;
                 break;
