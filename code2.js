@@ -24,6 +24,8 @@ class BootScene extends Phaser.Scene {
         this.load.image('obstacle', 'assets/obstacle.png');
         this.load.audio('collect', 'assets/sounds/coin.wav');
         this.load.audio('complete', 'assets/sounds/power_up.wav');
+
+        this.loadFont('PixelOperator8-Bold', 'assets/fonts/PixelOperator8-Bold.ttf');
     }
 
     create() {
@@ -75,6 +77,17 @@ class BootScene extends Phaser.Scene {
         this.player.play("walk", true);
 
         this.scene.start('StartScreen');
+
+        
+    }
+
+    loadFont(name, url) {
+        const newFont = new FontFace(name, `url(${url})`);
+        newFont.load().then(function(loadedFont) {
+            document.fonts.add(loadedFont);
+        }).catch(function(error) {
+            console.error('Error loading font', error);
+        });
     }
 }
 
