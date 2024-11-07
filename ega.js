@@ -118,8 +118,12 @@ class InstructionsScene extends BaseScene {
     create() {
         this.createBackground('bgInit', true);
         this.add.text(400, 100, 'Instruções', this.applyFontStyle('32px')).setOrigin(0.5);
-        this.add.text(400, 200, 'Collect renewable energy', this.applyFontStyle('16px')).setOrigin(0.5);
-        this.add.text(400, 300, 'to restore the environment.', this.applyFontStyle('16px')).setOrigin(0.5);
+        this.add.text(400, 200, 'Colete energias renováveis', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 240, 'para restaurar o meio ambiente.', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 300, 'Desvie dos obstáculos', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 340, 'para não perder energia.', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 400, 'Complete a meta de energia', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 440, 'antes que o tempo acabe!', this.applyFontStyle('20px')).setOrigin(0.5);
         this.createBackButton('StartScreen');
     }
 }
@@ -133,8 +137,13 @@ class ControlosScene extends BaseScene {
     create() {
         this.createBackground('bgInit', true);
         this.add.text(400, 100, 'Controlos', this.applyFontStyle('32px')).setOrigin(0.5);
-        this.add.text(400, 200, 'Collect renewable energy', this.applyFontStyle('16px')).setOrigin(0.5);
-        this.add.text(400, 300, 'to restore the environment.', this.applyFontStyle('16px')).setOrigin(0.5);
+        this.add.text(400, 200, 'Movimentação:', this.applyFontStyle('21px')).setOrigin(0.5);
+        this.add.text(200, 270, '← - Esquerda', this.applyFontStyle('21px')).setOrigin(0.5);
+        this.add.text(600, 270, '→ - Direita', this.applyFontStyle('21px')).setOrigin(0.5);
+        this.add.text(200, 340, '↑ - Cima', this.applyFontStyle('21px')).setOrigin(0.5);
+        this.add.text(600, 340, '↓ - Baixo.', this.applyFontStyle('21px')).setOrigin(0.5);
+        this.add.text(400, 410, 'Ações:', this.applyFontStyle('21px')).setOrigin(0.5);
+        this.add.text(400, 480, 'Click - Atacar', this.applyFontStyle('21px')).setOrigin(0.5);
         this.createBackButton('StartScreen');
     }
 }
@@ -194,7 +203,7 @@ class LevelSelectScene extends BaseScene {
         ];
 
         this.levels.forEach((level, index) => {
-            const text = level.unlocked ? level.name : `${level.name} (Locked)`;
+            const text = level.unlocked ? level.name : `${level.name} (Bloqueado)`;
             const color = level.unlocked ? '#ffffff' : '#ff0000';
             const levelButton = this.add.text(400, 200 + index * 50, text, this.applyFontStyle('24px', color)).setOrigin(0.5);
             
@@ -244,10 +253,10 @@ class GameScene extends Phaser.Scene {
 
     createUI() {
         const fontStyle = { fontSize: '24px', fill: '#ffffff', fontFamily: 'PixelOperator8-Bold' };
-        this.scoreText = this.add.text(16, 16, 'Score: 0', fontStyle);
-        this.energyText = this.add.text(16, 50, 'Energy: 0', fontStyle);
-        this.livesText = this.add.text(16, 84, 'Lives: 3', fontStyle);
-        this.timeText = this.add.text(600, 16, 'Time: 60', fontStyle);
+        this.scoreText = this.add.text(16, 16, 'Pontuação: 0', fontStyle);
+        this.energyText = this.add.text(16, 50, 'Energia: 0', fontStyle);
+        this.livesText = this.add.text(16, 84, 'Vidas: 3', fontStyle);
+        this.timeText = this.add.text(600, 16, 'Tempo: 60', fontStyle);
         
         this.progressBar = this.add.graphics();
         this.progressBar.fillStyle(0x00ff00, 1);
@@ -321,7 +330,7 @@ class GameScene extends Phaser.Scene {
 
     updateTimer() {
         this.timeLimit--;
-        this.timeText.setText(`Time: ${this.timeLimit}`);
+        this.timeText.setText(`Tempo: ${this.timeLimit}`);
         if (this.timeLimit <= 0) this.gameOver();
     }
 
@@ -368,8 +377,8 @@ class LevelCompleteScene extends BaseScene {
 
     create(data) {
         this.createBackground('bgInit', true);
-        this.add.text(400, 100, 'Level Complete!', this.applyFontStyle('32px')).setOrigin(0.5);
-        this.add.text(400, 200, `Score: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
+        this.add.text(400, 100, 'Nível Concluído!', this.applyFontStyle('32px')).setOrigin(0.5);
+        this.add.text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
 
         const nextLevelButton = this.add.text(400, 300, 'Next Level', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         nextLevelButton.on('pointerdown', () => {
@@ -380,7 +389,10 @@ class LevelCompleteScene extends BaseScene {
             this.scene.start('LevelSelectScene');
         });
 
-        const menuButton = this.add.text(400, 350, 'Back to Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
+        const backtoLevelsButton = this.add.text(400, 350, 'Seleção de Níveis', this.applyFontStyle()).setOrigin(0.5).setInteractive();
+        backtoLevelsButton.on('pointerdown', () => this.scene.start('LevelSelectScene'));
+
+        const menuButton = this.add.text(400, 450, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         menuButton.on('pointerdown', () => this.scene.start('StartScreen'));
     }
 }
@@ -392,13 +404,13 @@ class GameOverScene extends BaseScene {
 
     create(data) {
         this.createBackground('bgInit', true);
-        this.add.text(400, 100, 'Game Over', this.applyFontStyle('32px')).setOrigin(0.5);
-        this.add.text(400, 200, `Score: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
+        this.add.text(400, 100, 'Game Over!', this.applyFontStyle('32px')).setOrigin(0.5);
+        this.add.text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
 
-        const restartButton = this.add.text(400, 300, 'Restart', this.applyFontStyle()).setOrigin(0.5).setInteractive();
+        const restartButton = this.add.text(400, 300, 'Reiniciar', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         restartButton.on('pointerdown', () => this.scene.start('GameScene', { level: 1, difficulty: 'Medium', energyGoal: 50 }));
 
-        const menuButton = this.add.text(400, 350, 'Back to Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
+        const menuButton = this.add.text(400, 350, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         menuButton.on('pointerdown', () => this.scene.start('StartScreen'));
     }
 }
