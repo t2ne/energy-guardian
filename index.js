@@ -22,6 +22,7 @@ class BootScene extends Phaser.Scene {
         this.load.audio('collect', 'assets/sounds/coin.wav');
         this.load.audio('complete', 'assets/sounds/power_up.wav');
         this.load.audio('shootSound', 'assets/sounds/hurt.wav');
+        this.load.audio('dead', 'assets/sounds/explosion.wav');
 
         this.load.audio('level1-song', 'assets/music/level1.mp3');
         this.load.audio('level2-song', 'assets/music/level2.mp3');
@@ -31,9 +32,6 @@ class BootScene extends Phaser.Scene {
         this.load.audio('ambient', 'assets/music/bgMusic.mp3');
 
         this.loadFont('PixelOperator8-Bold', 'assets/fonts/PixelOperator8-Bold.ttf');
-        
-
-        this.load.audio('backgroundMusic', 'assets/sounds/background.mp3');
     }
 
     create() {
@@ -80,7 +78,7 @@ class BaseScene extends Phaser.Scene {
         bg.setScale(scale).setScrollFactor(0);
         
         if (darkTint) {
-            bg.setTint(0x333333);
+            bg.setTint(0x222222);
         }
     }
 
@@ -93,6 +91,16 @@ class BaseScene extends Phaser.Scene {
             .setInteractive()
             .on('pointerdown', () => this.scene.start(scene));
         return backButton;
+    }
+
+    playAmbientMusic() {
+        if (!this.sound.get('ambient')) {
+            const ambientVolume = parseFloat(localStorage.getItem('ambientVolume')) || 0.5;
+            this.ambientMusic = this.sound.add('ambient', { loop: true, volume: ambientVolume });
+            this.ambientMusic.play();
+        } else if (!this.sound.get('ambient').isPlaying) {
+            this.sound.get('ambient').play();
+        }
     }
 }
 
@@ -121,6 +129,8 @@ class StartScreen extends BaseScene {
                 .setInteractive()
                 .on('pointerdown', () => this.scene.start(button.scene));
         });
+
+        this.playAmbientMusic();
     }
 }
 
@@ -139,6 +149,7 @@ class InstructionsScene extends BaseScene {
         this.add.text(400, 400, 'Complete a meta de energia', this.applyFontStyle('20px')).setOrigin(0.5);
         this.add.text(400, 440, 'antes que o tempo acabe!', this.applyFontStyle('20px')).setOrigin(0.5);
         this.createBackButton('StartScreen');
+        this.playAmbientMusic();
     }
 }
 
@@ -146,7 +157,6 @@ class ControlosScene extends BaseScene {
     constructor() {
         super('ControlsScene');
     }
-
 
     create() {
         this.createBackground('bgInit', true);
@@ -159,6 +169,7 @@ class ControlosScene extends BaseScene {
         this.add.text(400, 380, 'Ações:', this.applyFontStyle('21px')).setOrigin(0.5);
         this.add.text(400, 440, 'Click - Atacar', this.applyFontStyle('21px')).setOrigin(0.5);
         this.createBackButton('StartScreen');
+        this.playAmbientMusic();
     }
 }
 
@@ -173,23 +184,39 @@ class OptionsSelectScene extends BaseScene {
 
         // Music volume slider
         this.add.text(400, 200, 'Música', this.applyFontStyle('24px')).setOrigin(0.5);
-        this.musicVolume = localStorage.getItem('musicVolume') || 0.5;
+        this.musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
         this.musicSlider = this.createSlider(400, 250, this.musicVolume, (value) => {
             this.musicVolume = value;
             localStorage.setItem('musicVolume', value);
-            // TODO: Implement actual music volume change
+            this.sound.volume = value;
         });
 
         // SFX volume slider
-        this.add.text(400, 350, 'Efeitos Sonoros', this.applyFontStyle('24px')).setOrigin(0.5);
-        this.sfxVolume = localStorage.getItem('sfxVolume') || 0.5;
-        this.sfxSlider = this.createSlider(400, 400, this.sfxVolume, (value) => {
+        this.add.text(400, 300, 'Efeitos Sonoros', this.applyFontStyle('24px')).setOrigin(0.5);
+        this.sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.5;
+        this.sfxSlider = this.createSlider(400, 350, this.sfxVolume, (value) => {
             this.sfxVolume = value;
             localStorage.setItem('sfxVolume', value);
-            // TODO: Implement actual SFX volume change
+            this.sound.get('shootSound').setVolume(value);
+            this.sound.get('collect').setVolume(value);
+            this.sound.get('complete').setVolume(value);
+            this.sound.get('dead').setVolume(value);
+        });
+
+        // Ambient sound volume slider
+        this.add.text(400, 400, 'Som Ambiente', this.applyFontStyle('24px')).setOrigin(0.5);
+        this.ambientVolume = parseFloat(localStorage.getItem('ambientVolume')) || 0.5;
+        this.ambientSlider = this.createSlider(400, 450, this.ambientVolume, (value) => {
+            this.ambientVolume = value;
+            localStorage.setItem('ambientVolume', value);
+            const ambientMusic = this.sound.get('ambient');
+            if (ambientMusic) {
+                ambientMusic.setVolume(value);
+            }
         });
 
         this.createBackButton('StartScreen');
+        this.playAmbientMusic();
     }
 
     createSlider(x, y, initialValue, onUpdate) {
@@ -234,6 +261,7 @@ class DifficultySelectScene extends BaseScene {
         this.updateDifficultyVisuals();
 
         this.createBackButton('StartScreen');
+        this.playAmbientMusic();
     }
 
     selectDifficulty(difficulty) {
@@ -257,19 +285,20 @@ class LevelSelectScene extends BaseScene {
 
     create() {
         this.createBackground('background');
+        const darkTint = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.6).setOrigin(0);
         this.add.text(400, 100, 'Selecionar Nível', this.applyFontStyle('32px')).setOrigin(0.5);
 
         this.levels = JSON.parse(localStorage.getItem('levels')) || [
-            { name: 'Nível 1', unlocked: true, energyGoal: 50 },
-            { name: 'Nível 2', unlocked: true, energyGoal: 100 },
-            { name: 'Nível 3', unlocked: true, energyGoal: 150 },
-            { name: 'Nível 4', unlocked: true, energyGoal: 200 }
+            { name: 'Nível 1', unlocked: true, energyGoal: 50, x: 180, y: 460 },
+            { name: 'Nível 2', unlocked: false, energyGoal: 100, x: 385, y: 210 },
+            { name: 'Nível 3', unlocked: false, energyGoal: 150, x: 450, y: 470 },
+            { name: 'Nível 4', unlocked: false, energyGoal: 200, x: 650, y: 250 }
         ];
 
         this.levels.forEach((level, index) => {
-            const text = level.unlocked ? level.name : `${level.name} (Bloqueado)`;
+            const text = level.unlocked ? level.name : `${level.name}`;
             const color = level.unlocked ? '#ffffff' : '#ff0000';
-            const levelButton = this.add.text(400, 200 + index * 50, text, this.applyFontStyle('24px', color)).setOrigin(0.5);
+            const levelButton = this.add.text(level.x, level.y, text, this.applyFontStyle('24px', color)).setOrigin(0.5);
             
             if (level.unlocked) {
                 levelButton.setInteractive();
@@ -278,19 +307,19 @@ class LevelSelectScene extends BaseScene {
         });
 
         this.createBackButton('StartScreen');
+        this.playAmbientMusic();
     }
 
     startLevel(level, energyGoal) {
         const difficulty = this.scene.get('DifficultySelectScene').selectedDifficulty;
+        this.sound.stopAll();
         this.scene.start('GameScene', { level, difficulty, energyGoal });
     }
 }
 
-class GameScene extends Phaser.Scene {
+class GameScene extends BaseScene {
     constructor() {
         super('GameScene');
-        this.musicVolume = 1; // Initialize music volume
-        this.sfxVolume = 1; // Initialize sfx volume
     }
 
     create(data) {
@@ -324,36 +353,47 @@ class GameScene extends Phaser.Scene {
 
         // Pause menu setup
         this.isPaused = false;
-        this.pauseMenu = this.add.container(400, 300).setAlpha(0);
-        this.pauseMenu.add(this.add.rectangle(0, 0, 300, 200, 0x000000, 0.8));
-        this.pauseMenu.add(this.add.text(0, -50, 'PAUSED', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5));
-        this.pauseMenu.add(this.add.text(0, 0, 'ESC - Resume', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5));
-        this.pauseMenu.add(this.add.text(0, 50, 'S - Quit to Level Select', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5));
+        this.pauseMenu = this.add.container(400, 300);
+        this.pauseMenu.add(this.add.rectangle(0, 0, 350, 250, 0x000000, 0.9));
+        this.pauseMenu.add(this.add.text(0, -70, 'PAUSED', this.applyFontStyle('32px')).setOrigin(0.5));
+        this.pauseMenu.add(this.add.text(0, 0, 'ESC - Resume', this.applyFontStyle('24px')).setOrigin(0.5));
+        this.pauseMenu.add(this.add.text(0, 60, 'S - Quit', this.applyFontStyle('24px')).setOrigin(0.5));
+        this.pauseMenu.setDepth(1000);
+        this.pauseMenu.setVisible(false);
 
         this.input.keyboard.on('keydown-ESC', this.togglePause, this);
         this.input.keyboard.on('keydown-S', this.quitToLevelSelect, this);
 
-        this.backgroundMusic = this.sound.add('backgroundMusic', { loop: true, volume: this.musicVolume });
-        this.backgroundMusic.play();
+        // Level-specific music
+        this.levelMusic = this.sound.add(`level${level}-song`, { loop: true, volume: this.sound.volume });
+        this.levelMusic.play();
 
         this.shootSound = this.sound.add('shootSound');
+        this.deadSound = this.sound.add('dead');
     }
 
     togglePause() {
         this.isPaused = !this.isPaused;
         if (this.isPaused) {
-            this.pauseMenu.setAlpha(1);
+            this.pauseMenu.setVisible(true);
             this.physics.pause();
-            this.scene.pause();
+            this.levelMusic.pause();
+            this.anims.pauseAll();
+            this.smokeEvent.paused = true;
+            this.timerEvent.paused = true;
         } else {
-            this.pauseMenu.setAlpha(0);
+            this.pauseMenu.setVisible(false);
             this.physics.resume();
-            this.scene.resume();
+            this.levelMusic.resume();
+            this.anims.resumeAll();
+            this.smokeEvent.paused = false;
+            this.timerEvent.paused = false;
         }
     }
 
     quitToLevelSelect() {
         if (this.isPaused) {
+            this.levelMusic.stop();
             this.scene.start('LevelSelectScene');
         }
     }
@@ -361,8 +401,7 @@ class GameScene extends Phaser.Scene {
     createUI() {
         const fontStyle = { fontSize: '24px', fill: '#ffffff', fontFamily: 'PixelOperator8-Bold' };
         this.scoreText = this.add.text(16, 16, 'Pontuação: 0', fontStyle);
-        this.energyText = this.add.text(16, 50, 'Energia: 0', fontStyle);
-        this.livesText = this.add.text(16, 84, 'Vidas: 3', fontStyle);
+        this.livesText = this.add.text(16, 50, 'Vidas: 3', fontStyle);
         this.timeText = this.add.text(580, 16, 'Tempo: 60', fontStyle);
         
         this.progressBar = this.add.graphics();
@@ -375,25 +414,25 @@ class GameScene extends Phaser.Scene {
         switch(difficulty) {
             case 'Fácil':
                 this.obstacleSpeed = 100;
-                this.obstacleSpawnRate = 3000;
+                this.obstacleSpawnRate = 1500;
                 break;
             case 'Difícil':
                 this.obstacleSpeed = 300;
-                this.obstacleSpawnRate = 1000;
+                this.obstacleSpawnRate = 500;
                 break;
             default: // Medium
                 this.obstacleSpeed = 200;
-                this.obstacleSpawnRate = 2000;
+                this.obstacleSpawnRate = 1000;
         }
 
-        this.time.addEvent({
+        this.timerEvent = this.time.addEvent({
             delay: 1000,
             callback: this.updateTimer,
             callbackScope: this,
             loop: true
         });
 
-        this.time.addEvent({
+        this.smokeEvent = this.time.addEvent({
             delay: this.obstacleSpawnRate,
             callback: this.spawnSmoke,
             callbackScope: this,
@@ -402,17 +441,20 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnSmoke() {
+        if (this.isPaused) return;
         const smoke = this.obstacles.create(800, Phaser.Math.Between(100, 500), 'smoke');
         smoke.setScale(0.2);
         smoke.setVelocityX(-this.obstacleSpeed);
         smoke.setGravityY(0);
         smoke.play('smoke');
 
-        // Improve smoke hitbox
+        // Improve smoke hitbox for all levels
         smoke.body.setSize(smoke.width * 0.8, smoke.height * 0.8);
         smoke.body.setOffset(smoke.width * 0.1, smoke.height * 0.1);
     }
+
     shootFireball(pointer) {
+        if (this.isPaused) return;
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.x, pointer.y);
         const fireball = this.physics.add.sprite(this.player.x, this.player.y, 'fireball').setScale(0.5);
         fireball.setRotation(angle);
@@ -427,14 +469,13 @@ class GameScene extends Phaser.Scene {
         });
 
         this.player.play('attack', true);
-        this.shootSound.play({ volume: this.sfxVolume }); // Added sound effect
+        this.shootSound.play({ volume: this.sound.volume });
     }
 
     updateScore() {
         this.score += 10;
         this.energy += 10;
         this.scoreText.setText(`Pontuação: ${this.score}`);
-        this.energyText.setText(`Energia: ${this.energy}`);
         this.updateProgressBar();
         if (this.energy >= this.energyGoal) this.completeLevel();
     }
@@ -447,24 +488,40 @@ class GameScene extends Phaser.Scene {
     }
 
     updateTimer() {
-        this.timeLimit--;
-        this.timeText.setText(`Tempo: ${this.timeLimit}`);
-        if (this.timeLimit <= 0) this.gameOver();
+        if (this.isPaused) return;
+        if (this.timeLimit > 0) {
+            this.timeLimit--;
+            this.timeText.setText(`Tempo: ${this.timeLimit}`);
+            if (this.timeLimit <= 0) this.gameOver();
+        }
     }
 
     handleCollision(player, obstacle) {
         obstacle.destroy();
         this.lives--;
-        this.livesText.setText(`Lives: ${this.lives}`);
+        this.livesText.setText(`Vidas: ${this.lives}`);
+        if (this.lives > 0) {
+            this.deadSound.play();
+        }
         if (this.lives <= 0) this.gameOver();
     }
 
     completeLevel() {
         this.sound.play('complete');
+        this.player.play('idle');
+        this.timerEvent.remove();
+        this.smokeEvent.remove();
+        this.levelMusic.stop();
         this.scene.start('LevelCompleteScene', { score: this.score, level: this.scene.settings.data.level });
     }
 
     gameOver() {
+        this.player.play('dead');
+        this.deadSound.play();
+        this.timerEvent.remove();
+        this.smokeEvent.remove();
+        this.physics.pause();
+        this.levelMusic.stop();
         this.scene.start('GameOverScene', { score: this.score });
     }
 
@@ -498,14 +555,6 @@ class GameScene extends Phaser.Scene {
             this.player.play('idle', true);
         }
     }
-    updateMusicVolume(volume) {
-        this.musicVolume = volume;
-        this.backgroundMusic.setVolume(volume);
-    }
-
-    updateSFXVolume(volume) {
-        this.sfxVolume = volume;
-    }
 }
 
 class LevelCompleteScene extends BaseScene {
@@ -518,21 +567,25 @@ class LevelCompleteScene extends BaseScene {
         this.add.text(400, 100, 'Nível Concluído!', this.applyFontStyle('32px')).setOrigin(0.5);
         this.add.text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
 
-        const nextLevelButton = this.add.text(400, 300, 'Próximo Nível', this.applyFontStyle()).setOrigin(0.5).setInteractive();
-        nextLevelButton.on('pointerdown', () => {
-            const levels = JSON.parse(localStorage.getItem('levels'));
-            if (data.level < levels.length) {
-                levels[data.level].unlocked = true;
-                localStorage.setItem('levels', JSON.stringify(levels));
-            }
-            this.scene.start('LevelSelectScene');
-        });
+        if (data.level < 4) {
+            const nextLevelButton = this.add.text(400, 300, 'Próximo Nível', this.applyFontStyle()).setOrigin(0.5).setInteractive();
+            nextLevelButton.on('pointerdown', () => {
+                const levels = JSON.parse(localStorage.getItem('levels')) || [];
+                if (data.level < levels.length) {
+                    levels[data.level].unlocked = true;
+                    localStorage.setItem('levels', JSON.stringify(levels));
+                }
+                this.scene.start('GameScene', { level: data.level + 1, difficulty: this.scene.get('DifficultySelectScene').selectedDifficulty, energyGoal: (data.level + 1) * 50 });
+            });
+        }
 
         const backtoLevelsButton = this.add.text(400, 350, 'Seleção de Níveis', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         backtoLevelsButton.on('pointerdown', () => this.scene.start('LevelSelectScene'));
 
         const menuButton = this.add.text(400, 450, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         menuButton.on('pointerdown', () => this.scene.start('StartScreen'));
+
+        this.playAmbientMusic();
     }
 }
 
@@ -551,6 +604,8 @@ class GameOverScene extends BaseScene {
 
         const menuButton = this.add.text(400, 350, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         menuButton.on('pointerdown', () => this.scene.start('StartScreen'));
+
+        this.playAmbientMusic();
     }
 }
 
@@ -560,7 +615,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: "#1d1d1d",
-    scene: [BootScene, StartScreen, InstructionsScene,ControlosScene, DifficultySelectScene, OptionsSelectScene, LevelSelectScene, GameScene, LevelCompleteScene, GameOverScene],
+    scene: [BootScene, StartScreen, InstructionsScene, ControlosScene, DifficultySelectScene, OptionsSelectScene, LevelSelectScene, GameScene, LevelCompleteScene, GameOverScene],
     physics: {
         default: 'arcade',
         arcade: {
