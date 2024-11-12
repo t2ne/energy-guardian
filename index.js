@@ -1,9 +1,67 @@
-class BootScene extends Phaser.Scene {
+class PreloadScene extends Phaser.Scene {
     constructor() {
-        super('BootScene');
+        super('PreloadScene');
     }
 
     preload() {
+        let progressBar = this.add.graphics();
+        let progressBox = this.add.graphics();
+        progressBox.fillStyle(0x222222, 0.8);
+        progressBox.fillRect(240, 270, 320, 50);
+
+        let width = this.cameras.main.width;
+        let height = this.cameras.main.height;
+        let loadingText = this.make.text({
+            x: width / 2,
+            y: height / 2 - 50,
+            style: {
+                font: '25px PixelOperator8-Bold',
+                fill: '#ffffff'
+            }
+        });
+        loadingText.setOrigin(0.5, 0.5);
+
+        let percentText = this.make.text({
+            x: width / 2,
+            y: height / 2 - 5,
+            text: '0%',
+            style: {
+                font: '18px PixelOperator8-Bold',
+                fill: '#ffffff'
+            }
+        });
+        percentText.setOrigin(0.5, 0.5);
+
+        let assetText = this.make.text({
+            x: width / 2,
+            y: height / 2 + 50,
+            text: '',
+            style: {
+                font: '18px PixelOperator8-Bold',
+                fill: '#ffffff'
+            }
+        });
+        assetText.setOrigin(0.5, 0.5);
+
+        this.load.on('progress', function (value) {
+            percentText.setText(parseInt(value * 100) + '%');
+            progressBar.clear();
+            progressBar.fillStyle(0xffffff, 1);
+            progressBar.fillRect(250, 280, 300 * value, 30);
+        });
+
+        this.load.on('fileprogress', function (file) {
+            assetText.setText('Carregando asset: ' + file.key);
+        });
+
+        this.load.on('complete', function () {
+            progressBar.destroy();
+            progressBox.destroy();
+            loadingText.destroy();
+            percentText.destroy();
+            assetText.destroy();
+        });
+
         this.load.image('background', 'assets/world/map.png');
         this.load.image('bgInit', 'assets/world/bg1.jpg');
         
@@ -32,6 +90,8 @@ class BootScene extends Phaser.Scene {
         this.load.audio('ambient', 'assets/music/bgMusic.mp3');
 
         this.loadFont('PixelOperator8-Bold', 'assets/fonts/PixelOperator8-Bold.ttf');
+
+        this.load.plugin('rexvirtualjoystickplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
     }
 
     create() {
@@ -182,13 +242,19 @@ class OptionsSelectScene extends BaseScene {
         this.createBackground('bgInit', true);
         this.add.text(400, 100, 'Opções', this.applyFontStyle('32px')).setOrigin(0.5);
 
-        // Music volume slider
+        // Music volume slider (level music only)
         this.add.text(400, 200, 'Música', this.applyFontStyle('24px')).setOrigin(0.5);
         this.musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
         this.musicSlider = this.createSlider(400, 250, this.musicVolume, (value) => {
             this.musicVolume = value;
             localStorage.setItem('musicVolume', value);
-            this.sound.volume = value;
+            // Update only level music volumes
+            ['level1-song', 'level2-song', 'level3-song', 'level4-song'].forEach(key => {
+                const music = this.sound.get(key);
+                if (music) {
+                    music.setVolume(value);
+                }
+            });
         });
 
         // SFX volume slider
@@ -197,13 +263,15 @@ class OptionsSelectScene extends BaseScene {
         this.sfxSlider = this.createSlider(400, 350, this.sfxVolume, (value) => {
             this.sfxVolume = value;
             localStorage.setItem('sfxVolume', value);
-            this.sound.get('shootSound').setVolume(value);
-            this.sound.get('collect').setVolume(value);
-            this.sound.get('complete').setVolume(value);
-            this.sound.get('dead').setVolume(value);
+            ['shootSound', 'collect', 'complete', 'dead'].forEach(key => {
+                const sfx = this.sound.get(key);
+                if (sfx) {
+                    sfx.setVolume(value);
+                }
+            });
         });
 
-        // Ambient sound volume slider
+        // Ambient sound volume slider (background music only)
         this.add.text(400, 400, 'Som Ambiente', this.applyFontStyle('24px')).setOrigin(0.5);
         this.ambientVolume = parseFloat(localStorage.getItem('ambientVolume')) || 0.5;
         this.ambientSlider = this.createSlider(400, 450, this.ambientVolume, (value) => {
@@ -288,17 +356,17 @@ class LevelSelectScene extends BaseScene {
         const darkTint = this.add.rectangle(0, 0, 800, 600, 0x000000, 0.6).setOrigin(0);
         this.add.text(400, 100, 'Selecionar Nível', this.applyFontStyle('32px')).setOrigin(0.5);
 
+        // Load levels from localStorage, or use default if not available
         this.levels = JSON.parse(localStorage.getItem('levels')) || [
             { name: 'Nível 1', unlocked: true, energyGoal: 50, x: 180, y: 460 },
             { name: 'Nível 2', unlocked: false, energyGoal: 100, x: 385, y: 210 },
-            { name: 'Nível 3', unlocked: false, energyGoal: 150, x: 450, y: 470 },
+            { name: 'Nível 3', unlocked: false, energyGoal: 150, x: 460, y: 495 },
             { name: 'Nível 4', unlocked: false, energyGoal: 200, x: 650, y: 250 }
         ];
 
         this.levels.forEach((level, index) => {
-            const text = level.unlocked ? level.name : `${level.name}`;
             const color = level.unlocked ? '#ffffff' : '#ff0000';
-            const levelButton = this.add.text(level.x, level.y, text, this.applyFontStyle('24px', color)).setOrigin(0.5);
+            const levelButton = this.add.text(level.x, level.y, level.name, this.applyFontStyle('24px', color)).setOrigin(0.5);
             
             if (level.unlocked) {
                 levelButton.setInteractive();
@@ -325,28 +393,60 @@ class GameScene extends BaseScene {
     create(data) {
         const { level, difficulty, energyGoal } = data;
         
-        // Adjust background image to fit screen
+        // Background setup
         const bg = this.add.image(400, 300, `level${level}`);
         const scaleX = this.cameras.main.width / bg.width;
         const scaleY = this.cameras.main.height / bg.height;
         const scale = Math.max(scaleX, scaleY);
         bg.setScale(scale).setScrollFactor(0);
 
+        // Player setup with precise hitbox
         this.player = this.physics.add.sprite(400, 300, 'player1');
         this.player.setCollideWorldBounds(true);
+        
+        // Adjust player hitbox to be more precise
+        const playerWidth = 40;  // Adjust these values based on your character's actual size
+        const playerHeight = 120;
+        this.player.body.setSize(playerWidth, playerHeight);
+        this.player.body.setOffset(
+            (this.player.width - playerWidth) / 2,
+            (this.player.height - playerHeight) / 2
+        );
+
+        // Game state initialization
         this.score = 0;
         this.energy = 0;
         this.energyGoal = energyGoal;
         this.timeLimit = 60;
         this.lives = 3;
 
+        // Input setup
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.on('pointerdown', this.shootFireball, this);
 
-        this.obstacles = this.physics.add.group();
-        this.spawnSmoke();
+        // Virtual Joystick setup
+        this.joyStick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
+            x: 700,
+            y: 500,
+            radius: 50,
+            base: this.add.circle(0, 0, 50, 0x888888),
+            thumb: this.add.circle(0, 0, 25, 0xcccccc),
+        });
 
-        this.physics.add.collider(this.player, this.obstacles, this.handleCollision, null, this);
+        // Obstacles group setup
+        this.obstacles = this.physics.add.group({
+            allowGravity: false,
+            immovable: true
+        });
+
+        // Collision setup with debug visualization
+        const collider = this.physics.add.overlap(
+            this.player,
+            this.obstacles,
+            this.handleCollision,
+            null,
+            this
+        );
 
         this.createUI();
         this.initGame(difficulty);
@@ -355,21 +455,26 @@ class GameScene extends BaseScene {
         this.isPaused = false;
         this.pauseMenu = this.add.container(400, 300);
         this.pauseMenu.add(this.add.rectangle(0, 0, 350, 250, 0x000000, 0.9));
-        this.pauseMenu.add(this.add.text(0, -70, 'PAUSED', this.applyFontStyle('32px')).setOrigin(0.5));
-        this.pauseMenu.add(this.add.text(0, 0, 'ESC - Resume', this.applyFontStyle('24px')).setOrigin(0.5));
-        this.pauseMenu.add(this.add.text(0, 60, 'S - Quit', this.applyFontStyle('24px')).setOrigin(0.5));
+        this.pauseMenu.add(this.add.text(0, -70, 'PAUSADO', this.applyFontStyle('32px')).setOrigin(0.5));
+        this.pauseMenu.add(this.add.text(0, 0, 'ESC - Voltar', this.applyFontStyle('24px')).setOrigin(0.5));
+        this.pauseMenu.add(this.add.text(0, 60, 'S - Sair', this.applyFontStyle('24px')).setOrigin(0.5));
         this.pauseMenu.setDepth(1000);
         this.pauseMenu.setVisible(false);
 
         this.input.keyboard.on('keydown-ESC', this.togglePause, this);
         this.input.keyboard.on('keydown-S', this.quitToLevelSelect, this);
 
-        // Level-specific music
-        this.levelMusic = this.sound.add(`level${level}-song`, { loop: true, volume: this.sound.volume });
+        // Audio setup with correct volume management
+        const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
+        this.levelMusic = this.sound.add(`level${level}-song`, {
+            loop: true,
+            volume: musicVolume
+        });
         this.levelMusic.play();
 
-        this.shootSound = this.sound.add('shootSound');
-        this.deadSound = this.sound.add('dead');
+        const sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.5;
+        this.shootSound = this.sound.add('shootSound', { volume: sfxVolume });
+        this.deadSound = this.sound.add('dead', { volume: sfxVolume });
     }
 
     togglePause() {
@@ -403,9 +508,11 @@ class GameScene extends BaseScene {
         this.scoreText = this.add.text(16, 16, 'Pontuação: 0', fontStyle);
         this.livesText = this.add.text(16, 50, 'Vidas: 3', fontStyle);
         this.timeText = this.add.text(580, 16, 'Tempo: 60', fontStyle);
+        this.add.text(16, 570, 'ESC para Pausar', this.applyFontStyle('16px'));
         
         this.progressBar = this.add.graphics();
         this.progressBar.fillStyle(0x00ff00, 1);
+        
         // Start with an empty progress bar
         this.updateProgressBar();
     }
@@ -442,15 +549,22 @@ class GameScene extends BaseScene {
 
     spawnSmoke() {
         if (this.isPaused) return;
+
         const smoke = this.obstacles.create(800, Phaser.Math.Between(100, 500), 'smoke');
         smoke.setScale(0.2);
+        
+        // Set precise smoke hitbox
+        const smokeWidth = 60;
+        const smokeHeight = 70;
+        smoke.body.setSize(smokeWidth, smokeHeight);
+        smoke.body.setOffset(
+            (smoke.width * smoke.scale - smokeWidth) / 2,
+            (smoke.height * smoke.scale - smokeHeight) / 2 + 5
+        );
+        
         smoke.setVelocityX(-this.obstacleSpeed);
-        smoke.setGravityY(0);
+        smoke.setImmovable(true);
         smoke.play('smoke');
-
-        // Improve smoke hitbox for all levels
-        smoke.body.setSize(smoke.width * 0.8, smoke.height * 0.8);
-        smoke.body.setOffset(smoke.width * 0.1, smoke.height * 0.1);
     }
 
     shootFireball(pointer) {
@@ -497,13 +611,24 @@ class GameScene extends BaseScene {
     }
 
     handleCollision(player, obstacle) {
+        if (!obstacle.active) return; // Prevent multiple collisions
+        
         obstacle.destroy();
         this.lives--;
         this.livesText.setText(`Vidas: ${this.lives}`);
+        
         if (this.lives > 0) {
             this.deadSound.play();
+            // Add visual feedback
+            this.player.setTint(0xff0000);
+            this.time.delayedCall(200, () => {
+                this.player.clearTint();
+            });
         }
-        if (this.lives <= 0) this.gameOver();
+        
+        if (this.lives <= 0) {
+            this.gameOver();
+        }
     }
 
     completeLevel() {
@@ -567,14 +692,22 @@ class LevelCompleteScene extends BaseScene {
         this.add.text(400, 100, 'Nível Concluído!', this.applyFontStyle('32px')).setOrigin(0.5);
         this.add.text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
 
+        let levels = JSON.parse(localStorage.getItem('levels')) || [
+            { name: 'Nível 1', unlocked: true, energyGoal: 50, x: 180, y: 460 },
+            { name: 'Nível 2', unlocked: false, energyGoal: 100, x: 385, y: 210 },
+            { name: 'Nível 3', unlocked: false, energyGoal: 150, x: 460, y: 495 },
+            { name: 'Nível 4', unlocked: false, energyGoal: 200, x: 650, y: 250 }
+        ];
+
+        if (data.level < levels.length) {
+            levels[data.level].unlocked = true;
+            localStorage.setItem('levels', JSON.stringify(levels));
+        }
+
         if (data.level < 4) {
             const nextLevelButton = this.add.text(400, 300, 'Próximo Nível', this.applyFontStyle()).setOrigin(0.5).setInteractive();
             nextLevelButton.on('pointerdown', () => {
-                const levels = JSON.parse(localStorage.getItem('levels')) || [];
-                if (data.level < levels.length) {
-                    levels[data.level].unlocked = true;
-                    localStorage.setItem('levels', JSON.stringify(levels));
-                }
+                this.sound.stopAll();
                 this.scene.start('GameScene', { level: data.level + 1, difficulty: this.scene.get('DifficultySelectScene').selectedDifficulty, energyGoal: (data.level + 1) * 50 });
             });
         }
@@ -600,10 +733,16 @@ class GameOverScene extends BaseScene {
         this.add.text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
 
         const restartButton = this.add.text(400, 300, 'Reiniciar', this.applyFontStyle()).setOrigin(0.5).setInteractive();
-        restartButton.on('pointerdown', () => this.scene.start('GameScene', { level: 1, difficulty: 'Medium', energyGoal: 50 }));
+        restartButton.on('pointerdown', () => {
+            this.sound.stopAll(); // Stop all sounds, including ambient music
+            this.scene.start('GameScene', { level: 1, difficulty: 'Medium', energyGoal: 50 });
+        });
 
         const menuButton = this.add.text(400, 350, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
-        menuButton.on('pointerdown', () => this.scene.start('StartScreen'));
+        menuButton.on('pointerdown', () => {
+            this.sound.stopAll(); // Stop all sounds, including ambient music
+            this.scene.start('StartScreen');
+        });
 
         this.playAmbientMusic();
     }
@@ -615,7 +754,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: "#1d1d1d",
-    scene: [BootScene, StartScreen, InstructionsScene, ControlosScene, DifficultySelectScene, OptionsSelectScene, LevelSelectScene, GameScene, LevelCompleteScene, GameOverScene],
+    scene: [PreloadScene, StartScreen, InstructionsScene, ControlosScene, DifficultySelectScene, OptionsSelectScene, LevelSelectScene, GameScene, LevelCompleteScene, GameOverScene],
     physics: {
         default: 'arcade',
         arcade: {
@@ -623,6 +762,7 @@ const config = {
             debug: false
         }
     },
+    plugins: {global: [{}],},
 };
 
 const game = new Phaser.Game(config);
