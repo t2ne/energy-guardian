@@ -14,15 +14,6 @@ class PreloadScene extends Phaser.Scene {
 
         let width = this.cameras.main.width;
         let height = this.cameras.main.height;
-        let loadingText = this.make.text({
-            x: width / 2,
-            y: height / 2 - 50,
-            style: {
-                font: '25px PixelOperator8-Bold',
-                fill: '#ffffff'
-            }
-        });
-        loadingText.setOrigin(0.5, 0.5);
 
         let percentText = this.make.text({
             x: width / 2,
@@ -60,7 +51,6 @@ class PreloadScene extends Phaser.Scene {
         this.load.on('complete', function () {
             progressBar.destroy();
             progressBox.destroy();
-            loadingText.destroy();
             percentText.destroy();
             assetText.destroy();
         });
@@ -193,6 +183,16 @@ class StartScreen extends BaseScene {
                 .on('pointerdown', () => this.scene.start(button.scene));
         });
 
+        //Dar reset aos níveis se o utilizador clicar no botão
+        const clearDataButton = this.add.text(110, 585, 'Limpar Níveis', this.applyFontStyle('15px'))
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', () => {
+                localStorage.removeItem('levels');
+                clearDataButton.setText('Níveis Limpos');
+                console.log('Levels data cleared');
+            });
+
         this.playAmbientMusic();
     }
 }
@@ -246,9 +246,9 @@ class OptionsSelectScene extends BaseScene {
         this.add.text(400, 100, 'Opções', this.applyFontStyle('32px')).setOrigin(0.5);
 
         // Music volume slider (level music only)
-        this.add.text(400, 200, 'Música', this.applyFontStyle('24px')).setOrigin(0.5);
+        this.add.text(400, 190, 'Música', this.applyFontStyle('24px')).setOrigin(0.5);
         this.musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
-        this.musicSlider = this.createSlider(400, 250, this.musicVolume, (value) => {
+        this.musicSlider = this.createSlider(400, 240, this.musicVolume, (value) => {
             this.musicVolume = value;
             localStorage.setItem('musicVolume', value);
             // Update only level music volumes
@@ -261,9 +261,9 @@ class OptionsSelectScene extends BaseScene {
         });
 
         // SFX volume slider
-        this.add.text(400, 300, 'Efeitos Sonoros', this.applyFontStyle('24px')).setOrigin(0.5);
+        this.add.text(400, 290, 'Efeitos Sonoros', this.applyFontStyle('24px')).setOrigin(0.5);
         this.sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.5;
-        this.sfxSlider = this.createSlider(400, 350, this.sfxVolume, (value) => {
+        this.sfxSlider = this.createSlider(400, 340, this.sfxVolume, (value) => {
             this.sfxVolume = value;
             localStorage.setItem('sfxVolume', value);
             ['shootSound', 'collect', 'complete', 'dead'].forEach(key => {
@@ -275,9 +275,9 @@ class OptionsSelectScene extends BaseScene {
         });
 
         // Ambient sound volume slider (background music only)
-        this.add.text(400, 400, 'Som Ambiente', this.applyFontStyle('24px')).setOrigin(0.5);
+        this.add.text(400, 390, 'Som Ambiente', this.applyFontStyle('24px')).setOrigin(0.5);
         this.ambientVolume = parseFloat(localStorage.getItem('ambientVolume')) || 0.5;
-        this.ambientSlider = this.createSlider(400, 450, this.ambientVolume, (value) => {
+        this.ambientSlider = this.createSlider(400, 440, this.ambientVolume, (value) => {
             this.ambientVolume = value;
             localStorage.setItem('ambientVolume', value);
             const ambientMusic = this.sound.get('ambient');
@@ -289,7 +289,7 @@ class OptionsSelectScene extends BaseScene {
         const joystickState = localStorage.getItem('joystick') === 'true';
         const joystickText = joystickState ? 'Joystick [x]' : 'Joystick [ ]';
 
-        this.joystick = this.add.text(400, 500, joystickText, this.applyFontStyle('24px')).setOrigin(0.5).setInteractive();
+        this.joystick = this.add.text(400, 490, joystickText, this.applyFontStyle('24px')).setOrigin(0.5).setInteractive();
 
         this.joystick.on('pointerdown', () => {
         if (this.joystick.text === 'Joystick [ ]') {
@@ -464,21 +464,22 @@ class GameScene extends BaseScene {
     }
 
     joyStickSetup() {
-
-    const joystickState = localStorage.getItem('joystick') === 'true';
-
-    if (joystickState) {
-        this.joyStick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
-            x: 100,
-            y: 500,
-            radius: 50,
-            base: this.add.circle(0, 0, 50, 0x888888),
-            thumb: this.add.circle(0, 0, 30, 0xcccccc),
-        });
+        const joystickState = localStorage.getItem('joystick') === 'true';
+    
+        if (joystickState) {
+            this.joyStick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
+                x: 100,
+                y: 500,
+                radius: 50,
+                base: this.add.circle(0, 0, 50, 0x888888),
+                thumb: this.add.circle(0, 0, 30, 0xcccccc),
+            });
+    
+            // Create cursor keys for joystick
+            this.joyStickCursorKeys = this.joyStick.createCursorKeys();
+        }
     }
-}
-
-
+    
     setupAudio(level) {
         const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
         this.levelMusic = this.sound.add(`level${level}-song`, {
@@ -680,31 +681,64 @@ class GameScene extends BaseScene {
 
     update() {
         if (this.isPaused) return;
-
+    
         const speed = 160;
+        let isMoving = false;
+    
+        // Handle keyboard input
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-speed);
             this.player.play('walk', true);
             this.player.flipX = true;
+            isMoving = true;
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(speed);
             this.player.play('walk', true);
             this.player.flipX = false;
+            isMoving = true;
         } else {
             this.player.setVelocityX(0);
         }
-
+    
         if (this.cursors.up.isDown) {
             this.player.setVelocityY(-speed);
             this.player.play('walk', true);
+            isMoving = true;
         } else if (this.cursors.down.isDown) {
             this.player.setVelocityY(speed);
             this.player.play('walk', true);
+            isMoving = true;
         } else {
             this.player.setVelocityY(0);
         }
-
-        if (this.player.body.velocity.x === 0 && this.player.body.velocity.y === 0) {
+    
+        // Handle joystick input
+        if (this.joyStickCursorKeys) {
+            if (this.joyStickCursorKeys.left.isDown) {
+                this.player.setVelocityX(-speed);
+                this.player.play('walk', true);
+                this.player.flipX = true;
+                isMoving = true;
+            } else if (this.joyStickCursorKeys.right.isDown) {
+                this.player.setVelocityX(speed);
+                this.player.play('walk', true);
+                this.player.flipX = false;
+                isMoving = true;
+            }
+    
+            if (this.joyStickCursorKeys.up.isDown) {
+                this.player.setVelocityY(-speed);
+                this.player.play('walk', true);
+                isMoving = true;
+            } else if (this.joyStickCursorKeys.down.isDown) {
+                this.player.setVelocityY(speed);
+                this.player.play('walk', true);
+                isMoving = true;
+            }
+        }
+    
+        // Stop animation if no movement
+        if (!isMoving) {
             this.player.play('idle', true);
         }
     }
