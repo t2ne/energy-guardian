@@ -1,3 +1,6 @@
+// @author: t8ne
+//--------------------------------------------------------------------------------------------
+
 class PreloadScene extends Phaser.Scene {
     constructor() {
         super('PreloadScene');
@@ -404,8 +407,7 @@ class GameScene extends BaseScene {
         this.player = this.physics.add.sprite(400, 300, 'player1');
         this.player.setCollideWorldBounds(true);
         
-        // Adjust player hitbox to be more precise
-        const playerWidth = 40;  // Adjust these values based on your character's actual size
+        const playerWidth = 40;
         const playerHeight = 120;
         this.player.body.setSize(playerWidth, playerHeight);
         this.player.body.setOffset(
@@ -424,15 +426,6 @@ class GameScene extends BaseScene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.on('pointerdown', this.shootFireball, this);
 
-        // Virtual Joystick setup
-        this.joyStick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
-            x: 700,
-            y: 500,
-            radius: 50,
-            base: this.add.circle(0, 0, 50, 0x888888),
-            thumb: this.add.circle(0, 0, 25, 0xcccccc),
-        });
-
         // Obstacles group setup
         this.obstacles = this.physics.add.group({
             allowGravity: false,
@@ -450,8 +443,36 @@ class GameScene extends BaseScene {
 
         this.createUI();
         this.initGame(difficulty);
+        this.setupPauseMenu();
+        this.setupAudio(level);
+        this.joyStickSetup();
+    }
 
-        // Pause menu setup
+    joyStickSetup() {
+        this.joyStick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
+            x: 700,
+            y: 500,
+            radius: 50,
+            base: this.add.circle(0, 0, 50, 0x888888),
+            thumb: this.add.circle(0, 0, 25, 0xcccccc),
+        });
+    }
+
+
+    setupAudio(level) {
+        const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
+        this.levelMusic = this.sound.add(`level${level}-song`, {
+            loop: true,
+            volume: musicVolume
+        });
+        this.levelMusic.play();
+
+        const sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.5;
+        this.shootSound = this.sound.add('shootSound', { volume: sfxVolume });
+        this.deadSound = this.sound.add('dead', { volume: sfxVolume });
+    }
+
+    setupPauseMenu() {
         this.isPaused = false;
         this.pauseMenu = this.add.container(400, 300);
         this.pauseMenu.add(this.add.rectangle(0, 0, 350, 250, 0x000000, 0.9));
@@ -463,18 +484,6 @@ class GameScene extends BaseScene {
 
         this.input.keyboard.on('keydown-ESC', this.togglePause, this);
         this.input.keyboard.on('keydown-S', this.quitToLevelSelect, this);
-
-        // Audio setup with correct volume management
-        const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
-        this.levelMusic = this.sound.add(`level${level}-song`, {
-            loop: true,
-            volume: musicVolume
-        });
-        this.levelMusic.play();
-
-        const sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.5;
-        this.shootSound = this.sound.add('shootSound', { volume: sfxVolume });
-        this.deadSound = this.sound.add('dead', { volume: sfxVolume });
     }
 
     togglePause() {
@@ -512,8 +521,7 @@ class GameScene extends BaseScene {
         
         this.progressBar = this.add.graphics();
         this.progressBar.fillStyle(0x00ff00, 1);
-        
-        // Start with an empty progress bar
+
         this.updateProgressBar();
     }
 
@@ -527,7 +535,7 @@ class GameScene extends BaseScene {
                 this.obstacleSpeed = 300;
                 this.obstacleSpawnRate = 500;
                 break;
-            default: // Medium
+            default: // Médio
                 this.obstacleSpeed = 200;
                 this.obstacleSpawnRate = 1000;
         }
@@ -553,7 +561,7 @@ class GameScene extends BaseScene {
         const smoke = this.obstacles.create(800, Phaser.Math.Between(100, 500), 'smoke');
         smoke.setScale(0.2);
         
-        // Set precise smoke hitbox
+        // Smoke Hitbox
         const smokeWidth = 60;
         const smokeHeight = 70;
         smoke.body.setSize(smokeWidth, smokeHeight);
@@ -740,7 +748,7 @@ class GameOverScene extends BaseScene {
 
         const menuButton = this.add.text(400, 350, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         menuButton.on('pointerdown', () => {
-            this.sound.stopAll(); // Stop all sounds, including ambient music
+            this.sound.stopAll();
             this.scene.start('StartScreen');
         });
 
