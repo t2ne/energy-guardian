@@ -205,11 +205,11 @@ class InstructionsScene extends BaseScene {
     create() {
         this.createBackground('bgInit', true);
         this.add.text(400, 100, 'Instruções', this.applyFontStyle('32px')).setOrigin(0.5);
-        this.add.text(400, 200, 'Apanhe energias renováveis', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 200, 'Apanha energias renováveis', this.applyFontStyle('20px')).setOrigin(0.5);
         this.add.text(400, 240, 'para restaurar o meio ambiente.', this.applyFontStyle('20px')).setOrigin(0.5);
-        this.add.text(400, 300, 'Desvie dos obstáculos', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 300, 'Desvia-te dos obstáculos', this.applyFontStyle('20px')).setOrigin(0.5);
         this.add.text(400, 340, 'para não perder energia.', this.applyFontStyle('20px')).setOrigin(0.5);
-        this.add.text(400, 400, 'Complete a meta de energia', this.applyFontStyle('20px')).setOrigin(0.5);
+        this.add.text(400, 400, 'Completa a meta de energia', this.applyFontStyle('20px')).setOrigin(0.5);
         this.add.text(400, 440, 'antes que o tempo acabe!', this.applyFontStyle('20px')).setOrigin(0.5);
         this.createBackButton('StartScreen');
         this.playAmbientMusic();
@@ -284,6 +284,21 @@ class OptionsSelectScene extends BaseScene {
             if (ambientMusic) {
                 ambientMusic.setVolume(value);
             }
+        });
+
+        const joystickState = localStorage.getItem('joystick') === 'true';
+        const joystickText = joystickState ? 'Joystick [x]' : 'Joystick [ ]';
+
+        this.joystick = this.add.text(400, 500, joystickText, this.applyFontStyle('24px')).setOrigin(0.5).setInteractive();
+
+        this.joystick.on('pointerdown', () => {
+        if (this.joystick.text === 'Joystick [ ]') {
+            this.joystick.setText('Joystick [x]');
+            localStorage.setItem('joystick', 'true');
+        } else {
+            this.joystick.setText('Joystick [ ]');
+            localStorage.setItem('joystick', 'false');
+        }
         });
 
         this.createBackButton('StartScreen');
@@ -449,14 +464,19 @@ class GameScene extends BaseScene {
     }
 
     joyStickSetup() {
+
+    const joystickState = localStorage.getItem('joystick') === 'true';
+
+    if (joystickState) {
         this.joyStick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
-            x: 700,
+            x: 100,
             y: 500,
             radius: 50,
             base: this.add.circle(0, 0, 50, 0x888888),
-            thumb: this.add.circle(0, 0, 25, 0xcccccc),
+            thumb: this.add.circle(0, 0, 30, 0xcccccc),
         });
     }
+}
 
 
     setupAudio(level) {
