@@ -58,15 +58,15 @@ class PreloadScene extends Phaser.Scene {
         this.load.image('background', 'assets/world/map.png');
         this.load.image('bgInit', 'assets/world/bg1.jpg');
         
-        this.load.image('level1', 'assets/world/desert.png');
-        this.load.image('level2', 'assets/world/snow.jpg');
-        this.load.image('level3', 'assets/world/grass.png');
-        this.load.image('level4', 'assets/world/cave.jpg');
+        this.load.image('level1', 'assets/tiles/desert_tile.png');
+        this.load.image('level2', 'assets/tiles/snow_tile.png');
+        this.load.image('level3', 'assets/tiles/grass_tile.png');
+        this.load.image('level4', 'assets/tiles/rock_tile.png');
 
-        this.load.spritesheet('player1', 'assets/character/1.png', { frameWidth: 138, frameHeight: 170 });
-        this.load.spritesheet('player2', 'assets/character/2.png', { frameWidth: 138, frameHeight: 170 }); 
+        this.load.spritesheet('player1', 'assets/character/1.png', { frameWidth: 136, frameHeight: 170 });
+        this.load.spritesheet('player2', 'assets/character/2.png', { frameWidth: 136, frameHeight: 170 }); 
 
-        this.load.spritesheet('fireball', 'assets/character/fireball.png', {frameWidth: 121, frameHeight: 99});
+        this.load.spritesheet('fireball', 'assets/character/fireball.png', {frameWidth: 121, frameHeight: 125});
         this.load.spritesheet('smoke', 'assets/etc/smoke.png', {frameWidth: 426, frameHeight: 497});
 
         this.load.image('obstacle', 'assets/etc/smoke.png');
@@ -89,29 +89,30 @@ class PreloadScene extends Phaser.Scene {
 
     create() {
         this.createAnimations();
-        this.scene.start('StartScreen');
+        this.scene.start('StartScene');
     }
-
+    
     createAnimations() {
         const animations = [
-            { key: "walk", spritesheet: "player1", frames: [16, 17, 18, 19, 20, 21, 22, 23] },
-            { key: "idle", spritesheet: "player1", frames: [0, 1, 2, 3, 4, 5, 6] },
-            { key: "attack", spritesheet: "player2", frames: [0, 1, 2, 3, 4, 5, 6, 7] },
-            { key: "dead", spritesheet: "player2", frames: [29, 30, 31, 32, 33, 34] },
-            { key: "fireball", spritesheet: "fireball", frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] },
-            { key: "smoke", spritesheet: "smoke", frames: [0, 1, 2, 3, 4, 5] }
+            { key: "walk", spritesheet: "player1", frames: [16, 17, 18, 19, 20, 21, 22, 23], repeat: -1, frameRate: 10 },
+            { key: "idle", spritesheet: "player1", frames: [0, 1, 2, 3, 4, 5, 6], repeat: -1, frameRate: 10 },
+            { key: "attack", spritesheet: "player2", frames: [0, 1, 2, 3, 4, 5, 6, 7], repeat: 0, frameRate: 64 },
+            { key: "dead", spritesheet: "player2", frames: [32, 33, 34, 35, 36, 37], repeat: 0, frameRate: 7 },
+            { key: "fireball", spritesheet: "fireball", frames: [0, 1, 2, 3, 4, 5, 6, 7, 8], repeat: 0, frameRate: 10 },
+            { key: "smoke", spritesheet: "smoke", frames: [0, 1, 2, 3, 4, 5], repeat: -1, frameRate: 10 }
         ];
-
+    
         animations.forEach(anim => {
             this.anims.create({
                 key: anim.key,
                 frames: this.anims.generateFrameNumbers(anim.spritesheet, { frames: anim.frames }),
-                frameRate: 16,
-                repeat: -1
+                frameRate: anim.frameRate,
+                repeat: anim.repeat
             });
         });
     }
-
+        
+    
     loadFont(name, url) {
         const newFont = new FontFace(name, `url(${url})`);
         newFont.load().then(function(loadedFont) {
@@ -120,7 +121,7 @@ class PreloadScene extends Phaser.Scene {
             console.error('Error loading font', error);
         });
     }
-}
+}    
 
 class BaseScene extends Phaser.Scene {
     createBackground(imageName = 'bgInit', darkTint = false) {
@@ -157,14 +158,15 @@ class BaseScene extends Phaser.Scene {
     }
 }
 
-class StartScreen extends BaseScene {
+class StartScene extends BaseScene {
     constructor() {
-        super('StartScreen');
+        super('StartScene');
     }
 
     create() {
         this.createBackground('bgInit', true);
         this.add.text(400, 100, 'Energy Guardian Adventure', this.applyFontStyle('30px')).setOrigin(0.5);
+        this.add.text(400, 135, '--------------------------------', this.applyFontStyle('30px')).setOrigin(0.5);
 
         this.add.text(630, 585, 'António Rebelo - Nº28837', this.applyFontStyle('15px')).setOrigin(0.5);
 
@@ -211,7 +213,7 @@ class InstructionsScene extends BaseScene {
         this.add.text(400, 340, 'para não perder energia.', this.applyFontStyle('20px')).setOrigin(0.5);
         this.add.text(400, 400, 'Completa a meta de energia', this.applyFontStyle('20px')).setOrigin(0.5);
         this.add.text(400, 440, 'antes que o tempo acabe!', this.applyFontStyle('20px')).setOrigin(0.5);
-        this.createBackButton('StartScreen');
+        this.createBackButton('StartScene');
         this.playAmbientMusic();
     }
 }
@@ -231,7 +233,7 @@ class ControlosScene extends BaseScene {
         this.add.text(600, 330, '↓ - Baixo.', this.applyFontStyle('21px')).setOrigin(0.5);
         this.add.text(400, 380, 'Ações:', this.applyFontStyle('21px')).setOrigin(0.5);
         this.add.text(400, 440, 'Click - Atacar', this.applyFontStyle('21px')).setOrigin(0.5);
-        this.createBackButton('StartScreen');
+        this.createBackButton('StartScene');
         this.playAmbientMusic();
     }
 }
@@ -287,13 +289,13 @@ class OptionsSelectScene extends BaseScene {
         });
 
         const joystickState = localStorage.getItem('joystick') === 'true';
-        const joystickText = joystickState ? 'Joystick [x]' : 'Joystick [ ]';
+        const joystickText = joystickState ? 'Joystick [X]' : 'Joystick [ ]';
 
         this.joystick = this.add.text(400, 490, joystickText, this.applyFontStyle('24px')).setOrigin(0.5).setInteractive();
 
         this.joystick.on('pointerdown', () => {
         if (this.joystick.text === 'Joystick [ ]') {
-            this.joystick.setText('Joystick [x]');
+            this.joystick.setText('Joystick [X]');
             localStorage.setItem('joystick', 'true');
         } else {
             this.joystick.setText('Joystick [ ]');
@@ -301,7 +303,7 @@ class OptionsSelectScene extends BaseScene {
         }
         });
 
-        this.createBackButton('StartScreen');
+        this.createBackButton('StartScene');
         this.playAmbientMusic();
     }
 
@@ -346,7 +348,7 @@ class DifficultySelectScene extends BaseScene {
         this.selectedDifficulty = localStorage.getItem('selectedDifficulty') || 'Médio';
         this.updateDifficultyVisuals();
 
-        this.createBackButton('StartScreen');
+        this.createBackButton('StartScene');
         this.playAmbientMusic();
     }
 
@@ -376,9 +378,9 @@ class LevelSelectScene extends BaseScene {
 
         // Load levels from localStorage, or use default if not available
         this.levels = JSON.parse(localStorage.getItem('levels')) || [
-            { name: 'Nível 1', unlocked: true, energyGoal: 50, x: 180, y: 460 },
-            { name: 'Nível 2', unlocked: false, energyGoal: 100, x: 385, y: 210 },
-            { name: 'Nível 3', unlocked: false, energyGoal: 150, x: 460, y: 495 },
+            { name: 'Nível 1', unlocked: true, energyGoal: 150, x: 180, y: 460 },
+            { name: 'Nível 2', unlocked: false, energyGoal: 150, x: 385, y: 210 },
+            { name: 'Nível 3', unlocked: false, energyGoal: 200, x: 460, y: 495 },
             { name: 'Nível 4', unlocked: false, energyGoal: 200, x: 650, y: 250 }
         ];
 
@@ -392,7 +394,7 @@ class LevelSelectScene extends BaseScene {
             }
         });
 
-        this.createBackButton('StartScreen');
+        this.createBackButton('StartScene');
         this.playAmbientMusic();
     }
 
@@ -400,7 +402,7 @@ class LevelSelectScene extends BaseScene {
         const difficulty = this.scene.get('DifficultySelectScene').selectedDifficulty;
         this.sound.stopAll();
         this.scene.start('GameScene', { level, difficulty, energyGoal });
-    }
+        }
 }
 
 class GameScene extends BaseScene {
@@ -410,6 +412,7 @@ class GameScene extends BaseScene {
 
     create(data) {
         const { level, difficulty, energyGoal } = data;
+        this.currentLevel = level;
         
         // Background setup
         const bg = this.add.image(400, 300, `level${level}`);
@@ -418,7 +421,7 @@ class GameScene extends BaseScene {
         const scale = Math.max(scaleX, scaleY);
         bg.setScale(scale).setScrollFactor(0);
 
-        // Player setup with precise hitbox
+        // Player setup
         this.player = this.physics.add.sprite(400, 300, 'player1');
         this.player.setCollideWorldBounds(true);
         
@@ -430,7 +433,7 @@ class GameScene extends BaseScene {
             (this.player.height - playerHeight) / 2
         );
 
-        // Game state initialization
+        // Game state init
         this.score = 0;
         this.energy = 0;
         this.energyGoal = energyGoal;
@@ -456,7 +459,7 @@ class GameScene extends BaseScene {
             this
         );
 
-        this.createUI();
+        this.createUI(level);
         this.initGame(difficulty);
         this.setupPauseMenu();
         this.setupAudio(level);
@@ -482,11 +485,15 @@ class GameScene extends BaseScene {
     
     setupAudio(level) {
         const musicVolume = parseFloat(localStorage.getItem('musicVolume')) || 0.5;
-        this.levelMusic = this.sound.add(`level${level}-song`, {
-            loop: true,
-            volume: musicVolume
-        });
-        this.levelMusic.play();
+        if (level !== undefined) {
+            this.levelMusic = this.sound.add(`level${level}-song`, {
+                loop: true,
+                volume: musicVolume
+            });
+            this.levelMusic.play();
+        } else {
+            console.warn('Level is undefined. Unable to load level-specific music.');
+        }
 
         const sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) || 0.5;
         this.shootSound = this.sound.add('shootSound', { volume: sfxVolume });
@@ -533,12 +540,18 @@ class GameScene extends BaseScene {
         }
     }
 
-    createUI() {
-        const fontStyle = { fontSize: '24px', fill: '#ffffff', fontFamily: 'PixelOperator8-Bold' };
+    createUI(level) {
+        let fillColor = '#ffffff';
+
+        if (level === 2) {
+            fillColor = '#000000';
+        }
+
+        const fontStyle = { fontSize: '24px', fill: fillColor, fontFamily: 'PixelOperator8-Bold' };
         this.scoreText = this.add.text(16, 16, 'Pontuação: 0', fontStyle);
         this.livesText = this.add.text(16, 50, 'Vidas: 3', fontStyle);
         this.timeText = this.add.text(580, 16, 'Tempo: 60', fontStyle);
-        this.add.text(16, 570, 'ESC para Pausar', this.applyFontStyle('16px'));
+        this.add.text(16, 574, 'ESC para Pausar', this.applyFontStyle('15px' , fillColor));
         
         this.progressBar = this.add.graphics();
         this.progressBar.fillStyle(0x00ff00, 1);
@@ -549,16 +562,16 @@ class GameScene extends BaseScene {
     initGame(difficulty) {
         switch(difficulty) {
             case 'Fácil':
-                this.obstacleSpeed = 100;
-                this.obstacleSpawnRate = 1500;
-                break;
-            case 'Difícil':
-                this.obstacleSpeed = 300;
-                this.obstacleSpawnRate = 500;
-                break;
-            default: // Médio
                 this.obstacleSpeed = 200;
                 this.obstacleSpawnRate = 1000;
+                break;
+            case 'Difícil':
+                this.obstacleSpeed = 350;
+                this.obstacleSpawnRate = 300;
+                break;
+            default: // Médio
+                this.obstacleSpeed = 250;
+                this.obstacleSpawnRate = 700;
         }
 
         this.timerEvent = this.time.addEvent({
@@ -597,21 +610,28 @@ class GameScene extends BaseScene {
     }
 
     shootFireball(pointer) {
-        if (this.isPaused) return;
+        if (this.isPaused || this.isMoving) return;
         const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.x, pointer.y);
         const fireball = this.physics.add.sprite(this.player.x, this.player.y, 'fireball').setScale(0.5);
         fireball.setRotation(angle);
         fireball.play('fireball');
         this.physics.moveTo(fireball, pointer.x, pointer.y, 600);
-
+    
         this.physics.add.collider(fireball, this.obstacles, (f, obstacle) => {
             this.sound.play('collect');
             obstacle.destroy();
             f.destroy();
             this.updateScore();
         });
-
-        this.player.play('attack', true);
+    
+        this.player.anims.play('attack', true);
+    
+        this.player.once('animationcomplete', (animation) => {
+            if (animation.key === 'attack') {
+                this.player.anims.play('idle', true);
+            }
+        });
+    
         this.shootSound.play({ volume: this.sound.volume });
     }
 
@@ -651,11 +671,12 @@ class GameScene extends BaseScene {
             // Add visual feedback
             this.player.setTint(0xff0000);
             this.time.delayedCall(200, () => {
-                this.player.clearTint();
+            this.player.clearTint();
             });
         }
         
         if (this.lives <= 0) {
+            this.deadSound.play();
             this.gameOver();
         }
     }
@@ -670,44 +691,57 @@ class GameScene extends BaseScene {
     }
 
     gameOver() {
-        this.player.play('dead');
-        this.deadSound.play();
+
+        this.player.anims.play('dead');
         this.timerEvent.remove();
         this.smokeEvent.remove();
         this.physics.pause();
         this.levelMusic.stop();
-        this.scene.start('GameOverScene', { score: this.score });
+    
+        this.player.on('animationcomplete', (animation) => {
+            if (animation.key === 'dead') {
+                this.time.delayedCall(0, () => {
+                    this.scene.start('GameOverScene', {
+                        score: this.score,
+                        level: this.currentLevel,
+                        difficulty: this.scene.settings.data.difficulty,
+                        energyGoal: this.scene.settings.data.energyGoal
+                    });
+                });
+            }
+        });
+
     }
 
     update() {
         if (this.isPaused) return;
     
         const speed = 160;
-        let isMoving = false;
+        this.isMoving = false;
     
         // Handle keyboard input
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-speed);
-            this.player.play('walk', true);
+            this.player.anims.play('walk', true);
             this.player.flipX = true;
-            isMoving = true;
+            this.isMoving = true;
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(speed);
-            this.player.play('walk', true);
+            this.player.anims.play('walk', true);
             this.player.flipX = false;
-            isMoving = true;
+            this.isMoving = true;
         } else {
             this.player.setVelocityX(0);
         }
     
         if (this.cursors.up.isDown) {
             this.player.setVelocityY(-speed);
-            this.player.play('walk', true);
-            isMoving = true;
+            this.player.anims.play('walk', true);
+            this.isMoving = true;
         } else if (this.cursors.down.isDown) {
             this.player.setVelocityY(speed);
-            this.player.play('walk', true);
-            isMoving = true;
+            this.player.anims.play('walk', true);
+            this.isMoving = true;
         } else {
             this.player.setVelocityY(0);
         }
@@ -716,30 +750,30 @@ class GameScene extends BaseScene {
         if (this.joyStickCursorKeys) {
             if (this.joyStickCursorKeys.left.isDown) {
                 this.player.setVelocityX(-speed);
-                this.player.play('walk', true);
+                this.player.anims.play('walk', true);
                 this.player.flipX = true;
-                isMoving = true;
+                this.isMoving = true;
             } else if (this.joyStickCursorKeys.right.isDown) {
                 this.player.setVelocityX(speed);
-                this.player.play('walk', true);
+                this.player.anims.play('walk', true);
                 this.player.flipX = false;
-                isMoving = true;
+                this.isMoving = true;
             }
     
             if (this.joyStickCursorKeys.up.isDown) {
                 this.player.setVelocityY(-speed);
-                this.player.play('walk', true);
-                isMoving = true;
+                this.player.anims.play('walk', true);
+                this.isMoving = true;
             } else if (this.joyStickCursorKeys.down.isDown) {
                 this.player.setVelocityY(speed);
-                this.player.play('walk', true);
-                isMoving = true;
+                this.player.anims.play('walk', true);
+                this.isMoving = true;
             }
         }
     
-        // Stop animation if no movement
-        if (!isMoving) {
-            this.player.play('idle', true);
+        // Stop animation if no movement and not attacking
+        if (!this.isMoving && this.player.anims && !this.player.anims.isPlaying && this.player.anims.currentAnim ) {
+            this.player.anims.play('idle', true);
         }
     }
 }
@@ -755,9 +789,9 @@ class LevelCompleteScene extends BaseScene {
         this.add.text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle('24px')).setOrigin(0.5);
 
         let levels = JSON.parse(localStorage.getItem('levels')) || [
-            { name: 'Nível 1', unlocked: true, energyGoal: 50, x: 180, y: 460 },
-            { name: 'Nível 2', unlocked: false, energyGoal: 100, x: 385, y: 210 },
-            { name: 'Nível 3', unlocked: false, energyGoal: 150, x: 460, y: 495 },
+            { name: 'Nível 1', unlocked: true, energyGoal: 150, x: 180, y: 460 },
+            { name: 'Nível 2', unlocked: false, energyGoal: 150, x: 385, y: 210 },
+            { name: 'Nível 3', unlocked: false, energyGoal: 200, x: 460, y: 495 },
             { name: 'Nível 4', unlocked: false, energyGoal: 200, x: 650, y: 250 }
         ];
 
@@ -777,8 +811,7 @@ class LevelCompleteScene extends BaseScene {
         const backtoLevelsButton = this.add.text(400, 350, 'Seleção de Níveis', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         backtoLevelsButton.on('pointerdown', () => this.scene.start('LevelSelectScene'));
 
-        const menuButton = this.add.text(400, 450, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
-        menuButton.on('pointerdown', () => this.scene.start('StartScreen'));
+        this.createBackButton('StartScene');
 
         this.playAmbientMusic();
     }
@@ -796,16 +829,15 @@ class GameOverScene extends BaseScene {
 
         const restartButton = this.add.text(400, 300, 'Reiniciar', this.applyFontStyle()).setOrigin(0.5).setInteractive();
         restartButton.on('pointerdown', () => {
-            this.sound.stopAll(); // Stop all sounds, including ambient music
-            this.scene.start('GameScene', { level: 1, difficulty: 'Medium', energyGoal: 50 });
-        });
-
-        const menuButton = this.add.text(400, 350, 'Voltar ao Menu', this.applyFontStyle()).setOrigin(0.5).setInteractive();
-        menuButton.on('pointerdown', () => {
             this.sound.stopAll();
-            this.scene.start('StartScreen');
+            this.scene.start('GameScene', { 
+                level: data.level, 
+                difficulty: data.difficulty, 
+                energyGoal: data.energyGoal 
+            });
         });
 
+        this.createBackButton('StartScene');
         this.playAmbientMusic();
     }
 }
@@ -816,7 +848,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: "#1d1d1d",
-    scene: [PreloadScene, StartScreen, InstructionsScene, ControlosScene, DifficultySelectScene, OptionsSelectScene, LevelSelectScene, GameScene, LevelCompleteScene, GameOverScene],
+    scene: [PreloadScene, StartScene, InstructionsScene, ControlosScene, DifficultySelectScene, OptionsSelectScene, LevelSelectScene, GameScene, LevelCompleteScene, GameOverScene],
     physics: {
         default: 'arcade',
         arcade: {
