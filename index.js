@@ -1,6 +1,7 @@
 // @author: t8ne
 //--------------------------------------------------------------------------------------------
 
+//Cena de Preload: Carregar previamente os assets
 class PreloadScene extends Phaser.Scene {
   constructor() {
     super("PreloadScene");
@@ -10,6 +11,7 @@ class PreloadScene extends Phaser.Scene {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
 
+    //Setup da barra de progresso
     let progressBar = this.add.graphics();
     let progressBox = this.add.graphics();
     progressBox.fillStyle(0x222222, 0.8);
@@ -18,6 +20,7 @@ class PreloadScene extends Phaser.Scene {
     let width = this.cameras.main.width;
     let height = this.cameras.main.height;
 
+    //Texto da Percentagem do load
     let percentText = this.make.text({
       x: width / 2,
       y: height / 2 - 5,
@@ -40,6 +43,7 @@ class PreloadScene extends Phaser.Scene {
     });
     assetText.setOrigin(0.5, 0.5);
 
+    //Estilo do texto e barra
     this.load.on("progress", function (value) {
       percentText.setText(parseInt(value * 100) + "%");
       progressBar.clear();
@@ -47,10 +51,12 @@ class PreloadScene extends Phaser.Scene {
       progressBar.fillRect(250, 280, 300 * value, 30);
     });
 
+    //Texto do nome dos ficheiros
     this.load.on("fileprogress", function (file) {
-      assetText.setText("Carregando asset: " + file.key);
+      assetText.setText("A carregar asset: " + file.key);
     });
 
+    //Desaparecer quando completo
     this.load.on("complete", function () {
       progressBar.destroy();
       progressBox.destroy();
@@ -58,14 +64,17 @@ class PreloadScene extends Phaser.Scene {
       assetText.destroy();
     });
 
+    //Load dos backgrounds (fora do jogo)
     this.load.image("background", "assets/world/map.png");
-    this.load.image("bgInit", "assets/world/bg1.jpg");
+    this.load.image("bgInit", "assets/world/bg.jpg");
 
+    //Load dos backgrounds dos níveis do jogo
     this.load.image("level1", "assets/tiles/desert_tile.png");
     this.load.image("level2", "assets/tiles/snow_tile.png");
     this.load.image("level3", "assets/tiles/grass_tile.png");
     this.load.image("level4", "assets/tiles/rock_tile.png");
 
+    //Load de spritesheets do character
     this.load.spritesheet("player1", "assets/character/1.png", {
       frameWidth: 136,
       frameHeight: 170,
@@ -75,6 +84,7 @@ class PreloadScene extends Phaser.Scene {
       frameHeight: 170,
     });
 
+    //Load dos spritesheets do ataque e do obstáculo
     this.load.spritesheet("fireball", "assets/character/fireball.png", {
       frameWidth: 121,
       frameHeight: 125,
@@ -83,13 +93,15 @@ class PreloadScene extends Phaser.Scene {
       frameWidth: 426,
       frameHeight: 497,
     });
-
     this.load.image("obstacle", "assets/etc/smoke.png");
+
+    //Load dos aúdios do jogador/jogo
     this.load.audio("collect", "assets/sounds/coin.wav");
     this.load.audio("complete", "assets/sounds/power_up.wav");
     this.load.audio("shootSound", "assets/sounds/hurt.wav");
     this.load.audio("dead", "assets/sounds/explosion.wav");
 
+    //Load das músicas dde fundo
     this.load.audio("level1-song", "assets/music/level1.mp3");
     this.load.audio("level2-song", "assets/music/level2.mp3");
     this.load.audio("level3-song", "assets/music/level3.mp3");
@@ -97,11 +109,13 @@ class PreloadScene extends Phaser.Scene {
 
     this.load.audio("ambient", "assets/music/bgMusic.mp3");
 
+    //Load da Fonte utilizada
     this.loadFont(
       "PixelOperator8-Bold",
       "assets/fonts/PixelOperator8-Bold.ttf"
     );
 
+    //Load do Plugin do JoyStick
     this.load.plugin(
       "rexvirtualjoystickplugin",
       "https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js",
@@ -109,14 +123,17 @@ class PreloadScene extends Phaser.Scene {
     );
   }
 
+  //Criação da próxima cena
   create() {
     this.createAnimations();
     this.scene.start("StartScene");
   }
 
+  //Criação das animações
   createAnimations() {
     const animations = [
       {
+        //Andar
         key: "walk",
         spritesheet: "player1",
         frames: [16, 17, 18, 19, 20, 21, 22, 23],
@@ -124,6 +141,7 @@ class PreloadScene extends Phaser.Scene {
         frameRate: 10,
       },
       {
+        //Parado
         key: "idle",
         spritesheet: "player1",
         frames: [0, 1, 2, 3, 4, 5, 6],
@@ -131,6 +149,7 @@ class PreloadScene extends Phaser.Scene {
         frameRate: 10,
       },
       {
+        //Atacar
         key: "attack",
         spritesheet: "player2",
         frames: [0, 1, 2, 3, 4, 5, 6, 7],
@@ -138,6 +157,7 @@ class PreloadScene extends Phaser.Scene {
         frameRate: 64,
       },
       {
+        //Morrer
         key: "dead",
         spritesheet: "player2",
         frames: [32, 33, 34, 35, 36, 37],
@@ -145,6 +165,7 @@ class PreloadScene extends Phaser.Scene {
         frameRate: 7,
       },
       {
+        //Fireball (quando o ataque é feito)
         key: "fireball",
         spritesheet: "fireball",
         frames: [0, 1, 2, 3, 4, 5, 6, 7, 8],
@@ -152,6 +173,7 @@ class PreloadScene extends Phaser.Scene {
         frameRate: 10,
       },
       {
+        //Obstáculo
         key: "smoke",
         spritesheet: "smoke",
         frames: [0, 1, 2, 3, 4, 5],
@@ -160,6 +182,7 @@ class PreloadScene extends Phaser.Scene {
       },
     ];
 
+    //Setup das animações
     animations.forEach((anim) => {
       this.anims.create({
         key: anim.key,
@@ -170,8 +193,18 @@ class PreloadScene extends Phaser.Scene {
         repeat: anim.repeat,
       });
     });
+
+    // this.player.on("animationupdate", (animation) => {
+    //   if (animation.key === "walk") {
+    //     this.player.setOrigin(0.5, 0.4);
+    //   } else if (animation.key === "dead") {
+    //     this.player.setOrigin(0.4, 0.2);
+    //   } else {
+    //   }
+    // });
   }
 
+  //Aplicação da fonte utilizada no jogo
   loadFont(name, url) {
     const newFont = new FontFace(name, `url(${url})`);
     newFont
@@ -185,7 +218,9 @@ class PreloadScene extends Phaser.Scene {
   }
 }
 
+//Cena que corre no background, menos na GameScene (jogo em si)
 class BaseScene extends Phaser.Scene {
+  //Colocar o background
   createBackground(imageName = "bgInit", darkTint = false) {
     const bg = this.add.image(
       this.cameras.main.width / 2,
@@ -202,10 +237,12 @@ class BaseScene extends Phaser.Scene {
     }
   }
 
+  //Aplicar a fonte
   applyFontStyle(size = "24px", color = "#ffffff") {
     return { fontSize: size, fill: color, fontFamily: "PixelOperator8-Bold" };
   }
 
+  //Criação de um Back Button para voltar á StartScene
   createBackButton(scene) {
     const backButton = this.add
       .text(50, 550, "Voltar", this.applyFontStyle("20px"))
@@ -214,6 +251,7 @@ class BaseScene extends Phaser.Scene {
     return backButton;
   }
 
+  //Tocar da música ambiente no background dos devidos ecrâs
   playAmbientMusic() {
     if (!this.sound.get("ambient")) {
       const ambientVolume =
@@ -229,6 +267,7 @@ class BaseScene extends Phaser.Scene {
   }
 }
 
+//Primeira cena real do jogo
 class StartScene extends BaseScene {
   constructor() {
     super("StartScene");
@@ -239,6 +278,8 @@ class StartScene extends BaseScene {
     this.input.mouse.enabled = true;
 
     this.createBackground("bgInit", true);
+
+    //Adição do texto principal da scene
     this.add
       .text(400, 100, "Energy Guardian Adventure", this.applyFontStyle("30px"))
       .setOrigin(0.5);
@@ -255,9 +296,10 @@ class StartScene extends BaseScene {
       .text(630, 585, "António Rebelo - Nº28837", this.applyFontStyle("15px"))
       .setOrigin(0.5);
 
+    //Botões diferentes que o user pode clicar, redirige á sua scene devida
     const buttons = [
       { text: "Jogar", scene: "LevelSelectScene" },
-      { text: "Instruções", scene: "InstructionsScene" },
+      { text: "Objetivo", scene: "ObjectiveScene" },
       { text: "Controlos", scene: "ControlsScene" },
       { text: "Dificuldade", scene: "DifficultySelectScene" },
       { text: "Opções", scene: "OptionsSelectScene" },
@@ -286,18 +328,20 @@ class StartScene extends BaseScene {
   }
 }
 
-class InstructionsScene extends BaseScene {
+//Ecrâ dos objetivos
+class ObjectiveScene extends BaseScene {
   constructor() {
-    super("InstructionsScene");
+    super("ObjectiveScene");
   }
 
   create() {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
 
+    //Texto do objetivo do jogo
     this.createBackground("bgInit", true);
     this.add
-      .text(400, 100, "Instruções", this.applyFontStyle("32px"))
+      .text(400, 100, "Objetivo", this.applyFontStyle("32px"))
       .setOrigin(0.5);
     this.add
       .text(400, 200, "Apanha energias renováveis", this.applyFontStyle("20px"))
@@ -322,11 +366,14 @@ class InstructionsScene extends BaseScene {
     this.add
       .text(400, 440, "antes que o tempo acabe!", this.applyFontStyle("20px"))
       .setOrigin(0.5);
+
+    //Adição do back button, algo comum nas próximos scenes
     this.createBackButton("StartScene");
     this.playAmbientMusic();
   }
 }
 
+//Ecrâ dos controlos do jogo
 class ControlosScene extends BaseScene {
   constructor() {
     super("ControlsScene");
@@ -336,6 +383,7 @@ class ControlosScene extends BaseScene {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
 
+    //Texto dos controlos do jogo
     this.createBackground("bgInit", true);
     this.add
       .text(400, 100, "Controlos", this.applyFontStyle("32px"))
@@ -366,6 +414,65 @@ class ControlosScene extends BaseScene {
   }
 }
 
+//Ecrâ da escolha da dificuldade do jogo
+class DifficultySelectScene extends BaseScene {
+  constructor() {
+    super("DifficultySelectScene");
+  }
+
+  create() {
+    this.input.keyboard.enabled = false;
+    this.input.mouse.enabled = true;
+
+    //Texto do ecrâ
+    this.createBackground("bgInit", true);
+    this.add
+      .text(400, 100, "Selecionar Dificuldade", this.applyFontStyle("32px"))
+      .setOrigin(0.5);
+
+    //Texto das Diferentes dificuldades do jogo
+    const difficulties = ["Fácil", "Médio", "Difícil"];
+    this.difficulties = difficulties.map((level, index) => ({
+      name: level,
+      button: this.add
+        .text(400, 250 + index * 50, level, this.applyFontStyle())
+        .setOrigin(0.5)
+        .setInteractive(),
+    }));
+
+    this.difficulties.forEach((difficulty) => {
+      difficulty.button.on("pointerdown", () =>
+        this.selectDifficulty(difficulty.name)
+      );
+    });
+
+    //Ir buscar dificuldade escolhida anteriormente, ou Médio se não tiver jogado antes
+    this.selectedDifficulty =
+      localStorage.getItem("selectedDifficulty") || "Médio";
+    this.updateDifficultyVisuals();
+
+    this.createBackButton("StartScene");
+    this.playAmbientMusic();
+  }
+
+  //Selecionar a dficuldade desejada
+  selectDifficulty(difficulty) {
+    this.selectedDifficulty = difficulty;
+    localStorage.setItem("selectedDifficulty", difficulty);
+    this.updateDifficultyVisuals();
+  }
+
+  //Mudar dificuldade selecionada de cor, para distinção
+  updateDifficultyVisuals() {
+    this.difficulties.forEach((difficulty) => {
+      const color =
+        difficulty.name === this.selectedDifficulty ? "#ff0000" : "#ffffff";
+      difficulty.button.setStyle(this.applyFontStyle("24px", color));
+    });
+  }
+}
+
+//Ecrâ de opções extra do jogo
 class OptionsSelectScene extends BaseScene {
   constructor() {
     super("OptionsSelectScene");
@@ -375,12 +482,13 @@ class OptionsSelectScene extends BaseScene {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
 
+    //Texto das opções do jogo
     this.createBackground("bgInit", true);
     this.add
       .text(400, 100, "Opções", this.applyFontStyle("32px"))
       .setOrigin(0.5);
 
-    // Music volume slider (level music only)
+    // Slider para o volume da música (apenas a de níveis do jogo)
     this.add
       .text(400, 190, "Música", this.applyFontStyle("24px"))
       .setOrigin(0.5);
@@ -404,7 +512,7 @@ class OptionsSelectScene extends BaseScene {
       }
     );
 
-    // SFX volume slider
+    // Slider para sound effects do jogo
     this.add
       .text(400, 290, "Efeitos Sonoros", this.applyFontStyle("24px"))
       .setOrigin(0.5);
@@ -420,7 +528,7 @@ class OptionsSelectScene extends BaseScene {
       });
     });
 
-    // Ambient sound volume slider (background music only)
+    // Slider para apenas a música ambiente
     this.add
       .text(400, 390, "Som Ambiente", this.applyFontStyle("24px"))
       .setOrigin(0.5);
@@ -440,6 +548,7 @@ class OptionsSelectScene extends BaseScene {
       }
     );
 
+    //Setup booleano para o uso ou não do JoyStick
     const joystickState = localStorage.getItem("joystick") === "true";
     const joystickText = joystickState ? "Joystick [X]" : "Joystick [ ]";
 
@@ -462,6 +571,7 @@ class OptionsSelectScene extends BaseScene {
     this.playAmbientMusic();
   }
 
+  //Método de criação do slider, feito para o código não ser repetido
   createSlider(x, y, initialValue, onUpdate) {
     const width = 200;
     const height = 20;
@@ -485,58 +595,6 @@ class OptionsSelectScene extends BaseScene {
   }
 }
 
-class DifficultySelectScene extends BaseScene {
-  constructor() {
-    super("DifficultySelectScene");
-  }
-
-  create() {
-    this.input.keyboard.enabled = false;
-    this.input.mouse.enabled = true;
-
-    this.createBackground("bgInit", true);
-    this.add
-      .text(400, 100, "Selecionar Dificuldade", this.applyFontStyle("32px"))
-      .setOrigin(0.5);
-
-    const difficulties = ["Fácil", "Médio", "Difícil"];
-    this.difficulties = difficulties.map((level, index) => ({
-      name: level,
-      button: this.add
-        .text(400, 250 + index * 50, level, this.applyFontStyle())
-        .setOrigin(0.5)
-        .setInteractive(),
-    }));
-
-    this.difficulties.forEach((difficulty) => {
-      difficulty.button.on("pointerdown", () =>
-        this.selectDifficulty(difficulty.name)
-      );
-    });
-
-    this.selectedDifficulty =
-      localStorage.getItem("selectedDifficulty") || "Médio";
-    this.updateDifficultyVisuals();
-
-    this.createBackButton("StartScene");
-    this.playAmbientMusic();
-  }
-
-  selectDifficulty(difficulty) {
-    this.selectedDifficulty = difficulty;
-    localStorage.setItem("selectedDifficulty", difficulty);
-    this.updateDifficultyVisuals();
-  }
-
-  updateDifficultyVisuals() {
-    this.difficulties.forEach((difficulty) => {
-      const color =
-        difficulty.name === this.selectedDifficulty ? "#ff0000" : "#ffffff";
-      difficulty.button.setStyle(this.applyFontStyle("24px", color));
-    });
-  }
-}
-
 class LevelSelectScene extends BaseScene {
   constructor() {
     super("LevelSelectScene");
@@ -546,6 +604,7 @@ class LevelSelectScene extends BaseScene {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
 
+    //Adição do background do ecrâ, e uma tint no mesmo
     this.createBackground("background");
     const darkTint = this.add
       .rectangle(0, 0, 800, 600, 0x000000, 0.6)
@@ -554,7 +613,7 @@ class LevelSelectScene extends BaseScene {
       .text(400, 100, "Selecionar Nível", this.applyFontStyle("32px"))
       .setOrigin(0.5);
 
-    // Load levels from localStorage, or use default if not available
+    // Load dos níveis do localstorage, ou usar o default se não existirem
     this.levels = JSON.parse(localStorage.getItem("levels")) || [
       { name: "Nível 1", unlocked: true, energyGoal: 150, x: 180, y: 460 },
       { name: "Nível 2", unlocked: false, energyGoal: 150, x: 385, y: 210 },
@@ -562,12 +621,14 @@ class LevelSelectScene extends BaseScene {
       { name: "Nível 4", unlocked: false, energyGoal: 200, x: 650, y: 250 },
     ];
 
+    //Diferentes cores se o mesmo estiver bloqueado ou não
     this.levels.forEach((level, index) => {
       const color = level.unlocked ? "#ffffff" : "#ff0000";
       const levelButton = this.add
         .text(level.x, level.y, level.name, this.applyFontStyle("24px", color))
         .setOrigin(0.5);
 
+      //Deixá-lo interativo se o mesmo estiver desbloqueado
       if (level.unlocked) {
         levelButton.setInteractive();
         levelButton.on("pointerdown", () =>
@@ -580,6 +641,7 @@ class LevelSelectScene extends BaseScene {
     this.playAmbientMusic();
   }
 
+  //Começar o nível coorespondente
   startLevel(level, energyGoal) {
     const difficulty = this.scene.get(
       "DifficultySelectScene"
@@ -589,6 +651,7 @@ class LevelSelectScene extends BaseScene {
   }
 }
 
+//O próprio jogo
 class GameScene extends BaseScene {
   constructor() {
     super("GameScene");
@@ -598,20 +661,22 @@ class GameScene extends BaseScene {
     this.input.keyboard.enabled = true;
     this.input.mouse.enabled = true;
 
+    //Diferentes Variáveis
     const { level, difficulty, energyGoal } = data;
     this.currentLevel = level;
 
-    // Background setup
+    //Setup do Background
     const bg = this.add.image(400, 300, `level${level}`);
     const scaleX = this.cameras.main.width / bg.width;
     const scaleY = this.cameras.main.height / bg.height;
     const scale = Math.max(scaleX, scaleY);
     bg.setScale(scale).setScrollFactor(0);
 
-    // Player setup
+    //Setup do jogador (player)
     this.player = this.physics.add.sprite(400, 300, "player1");
     this.player.setCollideWorldBounds(true);
 
+    //TODO: MAYBE AQUI O SET ORIGIN DEVE SER
     const playerWidth = 40;
     const playerHeight = 120;
     this.player.body.setSize(playerWidth, playerHeight);
@@ -620,28 +685,28 @@ class GameScene extends BaseScene {
       (this.player.height - playerHeight) / 2
     );
 
-    // Initialize player state
+    //Iniciar o estado do player
     this.playerState = "idle";
     this.player.anims.play("idle", true);
 
-    // Game state init
+    //Iniciar o jogo
     this.score = 0;
     this.energy = 0;
     this.energyGoal = energyGoal;
     this.timeLimit = 60;
     this.lives = 3;
 
-    // Input setup
+    //Setup dos cursor keys
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.on("pointerdown", this.shootFireball, this);
 
-    // Obstacles group setup
+    //Setup do grupo de objetos
     this.obstacles = this.physics.add.group({
       allowGravity: false,
       immovable: true,
     });
 
-    // Collision setup with debug visualization
+    //Setup de colisões, o mesmo é um debugger
     const collider = this.physics.add.overlap(
       this.player,
       this.obstacles,
@@ -657,9 +722,11 @@ class GameScene extends BaseScene {
     this.joyStickSetup();
   }
 
+  //Setup do Joystick
   joyStickSetup() {
     const joystickState = localStorage.getItem("joystick") === "true";
 
+    //Criar o joystick se o mesmo estiver enabled
     if (joystickState) {
       this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
         x: 100,
@@ -669,13 +736,16 @@ class GameScene extends BaseScene {
         thumb: this.add.circle(0, 0, 30, 0xcccccc),
       });
 
-      // Create cursor keys for joystick
+      //Criar as keys do joystick
       this.joyStickCursorKeys = this.joyStick.createCursorKeys();
     }
   }
 
+  //Setup do áudio
   setupAudio(level) {
     const musicVolume = parseFloat(localStorage.getItem("musicVolume")) || 0.5;
+
+    //Debugger para se o nível não estiver definido (bug fix)
     if (level !== undefined) {
       this.levelMusic = this.sound.add(`level${level}-song`, {
         loop: true,
@@ -683,16 +753,20 @@ class GameScene extends BaseScene {
       });
       this.levelMusic.play();
     } else {
-      console.warn("Level is undefined. Unable to load level-specific music.");
+      console.warn("Nível indefinido.");
     }
 
+    //Mudança do volume dependendo das options do user
     const sfxVolume = parseFloat(localStorage.getItem("sfxVolume")) || 0.5;
     this.shootSound = this.sound.add("shootSound", { volume: sfxVolume });
     this.deadSound = this.sound.add("dead", { volume: sfxVolume });
   }
 
+  //Menu de pausa
   setupPauseMenu() {
     this.isPaused = false;
+
+    //Texto e estilos para o mesmo
     this.pauseMenu = this.add.container(400, 300);
     this.pauseMenu.add(this.add.rectangle(0, 0, 350, 250, 0x000000, 0.9));
     this.pauseMenu.add(
@@ -713,10 +787,12 @@ class GameScene extends BaseScene {
     this.pauseMenu.setDepth(1000);
     this.pauseMenu.setVisible(false);
 
+    //ESC para voltar ao jogo, S para voltar á escolha de níveis
     this.input.keyboard.on("keydown-ESC", this.togglePause, this);
     this.input.keyboard.on("keydown-S", this.quitToLevelSelect, this);
   }
 
+  //Utilizado para parar música e etcs quando o pause menu está na screen
   togglePause() {
     this.isPaused = !this.isPaused;
     if (this.isPaused) {
@@ -734,6 +810,7 @@ class GameScene extends BaseScene {
     }
   }
 
+  //Caso o user carrege no S
   quitToLevelSelect() {
     if (this.isPaused) {
       this.levelMusic.stop();
@@ -741,6 +818,7 @@ class GameScene extends BaseScene {
     }
   }
 
+  //Esqueleto da UI que está no jogo, a mesma leva update a cada segundo
   createUI(level) {
     let fillColor = "#ffffff";
 
@@ -763,12 +841,14 @@ class GameScene extends BaseScene {
       this.applyFontStyle("15px", fillColor)
     );
 
+    //Barra de progresso do jogador no nível
     this.progressBar = this.add.graphics();
     this.progressBar.fillStyle(0x00ff00, 1);
 
     this.updateProgressBar();
   }
 
+  //Iniciar o jogo com valores diferentes dependendo da dificuldade
   initGame(difficulty) {
     switch (difficulty) {
       case "Fácil":
@@ -784,6 +864,7 @@ class GameScene extends BaseScene {
         this.obstacleSpawnRate = 700;
     }
 
+    //Tempo do jogo
     this.timerEvent = this.time.addEvent({
       delay: 1000,
       callback: this.updateTimer,
@@ -791,6 +872,7 @@ class GameScene extends BaseScene {
       loop: true,
     });
 
+    //Spawn dos obstáculos
     this.smokeEvent = this.time.addEvent({
       delay: this.obstacleSpawnRate,
       callback: this.spawnSmoke,
@@ -799,9 +881,12 @@ class GameScene extends BaseScene {
     });
   }
 
+  //Método de spawn dos obstáculos
   spawnSmoke() {
+    //Não fazer nada se o jogo estiver pausado
     if (this.isPaused) return;
 
+    //Criaão do Obstáculo
     const smoke = this.obstacles.create(
       800,
       Phaser.Math.Between(100, 500),
@@ -809,7 +894,7 @@ class GameScene extends BaseScene {
     );
     smoke.setScale(0.2);
 
-    // Smoke Hitbox
+    //Hitbox do mesmo
     const smokeWidth = 60;
     const smokeHeight = 70;
     smoke.body.setSize(smokeWidth, smokeHeight);
@@ -818,20 +903,25 @@ class GameScene extends BaseScene {
       (smoke.height * smoke.scale - smokeHeight) / 2 + 5
     );
 
+    //Mudança de velocidade dependendo do estado do jogo e dificuldade
     smoke.setVelocityX(-this.obstacleSpeed);
     smoke.setImmovable(true);
     smoke.play("smoke");
   }
 
+  //Fireball lançada depois do ataque do jogador
   shootFireball(pointer) {
+    //Ifs diferentes para não poder disparar
     if (this.isPaused || this.isGameOver || this.isMoving) return;
 
+    //"Angular" o spritesheet dependendo da posição do mouse e do player
     const angle = Phaser.Math.Angle.Between(
       this.player.x,
       this.player.y,
       pointer.x,
       pointer.y
     );
+
     const fireball = this.physics.add
       .sprite(this.player.x, this.player.y, "fireball")
       .setScale(0.5);
@@ -839,6 +929,7 @@ class GameScene extends BaseScene {
     fireball.play("fireball");
     this.physics.moveTo(fireball, pointer.x, pointer.y, 600);
 
+    //Se houver colisão entre fireball e obstáculo, ambos desaparecem
     this.physics.add.collider(fireball, this.obstacles, (f, obstacle) => {
       this.sound.play("collect");
       obstacle.destroy();
@@ -848,6 +939,7 @@ class GameScene extends BaseScene {
 
     this.player.anims.play("attack", true);
 
+    //Animação de ataque acaba e volta a idle
     this.player.once("animationcomplete", (animation) => {
       if (animation.key === "attack") {
         this.player.anims.play("idle", true);
@@ -857,6 +949,7 @@ class GameScene extends BaseScene {
     this.shootSound.play({ volume: this.sound.volume });
   }
 
+  //Update do score a cada obstáculo destruído
   updateScore() {
     this.score += 10;
     this.energy += 10;
@@ -865,6 +958,7 @@ class GameScene extends BaseScene {
     if (this.energy >= this.energyGoal) this.completeLevel();
   }
 
+  //Update da progress bar a cada obstáculo destruído
   updateProgressBar() {
     const progress = (this.energy / this.energyGoal) * 600;
     this.progressBar.clear();
@@ -872,6 +966,7 @@ class GameScene extends BaseScene {
     this.progressBar.fillRect(100, 550, progress, 20);
   }
 
+  //Update do timer, se não estiver com o jogo em pausa
   updateTimer() {
     if (this.isPaused) return;
     if (this.timeLimit > 0) {
@@ -881,13 +976,16 @@ class GameScene extends BaseScene {
     }
   }
 
+  //Colisão entre player e obstáculo
   handleCollision(player, obstacle) {
     if (!obstacle.active || this.isGameOver) return;
 
+    //-1 vida
     obstacle.destroy();
     this.lives--;
     this.livesText.setText(`Vidas: ${this.lives}`);
 
+    //Se houver mais que 0 vidas
     if (this.lives > 0) {
       this.deadSound.play();
       // Add visual feedback
@@ -897,12 +995,14 @@ class GameScene extends BaseScene {
       });
     }
 
+    //Se não houverem vidas (o jogo acaba)
     if (this.lives <= 0) {
       this.deadSound.play();
       this.gameOver();
     }
   }
 
+  //Acabar o nível se a progress bar chegar ao fim
   completeLevel() {
     this.sound.play("complete");
     this.player.play("idle");
@@ -915,21 +1015,24 @@ class GameScene extends BaseScene {
     });
   }
 
+  //Acabar o nível se não houverem mais vidas
   gameOver() {
     this.timerEvent.remove();
     this.smokeEvent.remove();
     this.physics.pause();
     this.levelMusic.stop();
 
+    //Deixar de poder mover o player
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = false;
 
     this.player.anims.play("dead");
 
+    //Play da animação e mudança de scene
     this.player.on("animationcomplete", (animation) => {
       if (animation.key === "dead") {
         //TODO: Fix desta origin, não funciona
-        this.player.setOrigin(0.5, 0.2);
+        this.player.setOrigin(0.4, 0.2);
         this.time.delayedCall(-400, () => {
           this.scene.start("GameOverScene", {
             score: this.score,
@@ -942,6 +1045,7 @@ class GameScene extends BaseScene {
     });
   }
 
+  //Update da movimentação do player
   update() {
     if (this.isPaused || this.isGameOver) {
       this.player.setVelocity(0);
@@ -953,14 +1057,16 @@ class GameScene extends BaseScene {
     let isMoving = false;
 
     //TODO: fazer com que a origin seja aplicada no walk
-    this.player.setOrigin(0.6, 0.4);
+    this.player.setOrigin(0.5, 0.4);
 
-    // Handle keyboard input
+    //Movimentação para teclado
+    //Esquerda
     if (this.cursors.left.isDown) {
       this.player.setVelocityX(-speed);
       this.player.flipX = true;
       newState = "walk";
       isMoving = true;
+      //Direita
     } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(speed);
       this.player.flipX = false;
@@ -970,10 +1076,12 @@ class GameScene extends BaseScene {
       this.player.setVelocityX(0);
     }
 
+    //Cima
     if (this.cursors.up.isDown) {
       this.player.setVelocityY(-speed);
       newState = "walk";
       isMoving = true;
+      //Baixo
     } else if (this.cursors.down.isDown) {
       this.player.setVelocityY(speed);
       newState = "walk";
@@ -982,13 +1090,15 @@ class GameScene extends BaseScene {
       this.player.setVelocityY(0);
     }
 
-    // Handle joystick input
+    //Para o joystick
     if (this.joyStickCursorKeys) {
+      //Esquerda
       if (this.joyStickCursorKeys.left.isDown) {
         this.player.setVelocityX(-speed);
         this.player.flipX = true;
         newState = "walk";
         isMoving = true;
+        //Direita
       } else if (this.joyStickCursorKeys.right.isDown) {
         this.player.setVelocityX(speed);
         this.player.flipX = false;
@@ -996,10 +1106,12 @@ class GameScene extends BaseScene {
         isMoving = true;
       }
 
+      //Cima
       if (this.joyStickCursorKeys.up.isDown) {
         this.player.setVelocityY(-speed);
         newState = "walk";
         isMoving = true;
+        //Baixo
       } else if (this.joyStickCursorKeys.down.isDown) {
         this.player.setVelocityY(speed);
         newState = "walk";
@@ -1007,7 +1119,7 @@ class GameScene extends BaseScene {
       }
     }
 
-    // Update player animation
+    // Update da animação do player (do seu estado)
     if (
       newState !== this.playerState ||
       (newState === "idle" && !this.player.anims.isPlaying)
@@ -1015,7 +1127,7 @@ class GameScene extends BaseScene {
       this.playerState = newState;
       this.player.anims.play(this.playerState, true);
 
-      // Add the new animation complete listener
+      //Adicionar o listener da animação completa
       this.player.once("animationcomplete", (animation) => {
         if (animation.key === "walk") {
           this.playerState = "idle";
@@ -1026,6 +1138,7 @@ class GameScene extends BaseScene {
   }
 }
 
+//Ecrâ do nível concluído
 class LevelCompleteScene extends BaseScene {
   constructor() {
     super("LevelCompleteScene");
@@ -1034,6 +1147,8 @@ class LevelCompleteScene extends BaseScene {
   create(data) {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
+
+    //Texto do ecrâ
     this.createBackground("bgInit", true);
     this.add
       .text(400, 100, "Nível Concluído!", this.applyFontStyle("32px"))
@@ -1042,6 +1157,7 @@ class LevelCompleteScene extends BaseScene {
       .text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle("24px"))
       .setOrigin(0.5);
 
+    //Etcs dependendo do nível
     let levels = JSON.parse(localStorage.getItem("levels")) || [
       { name: "Nível 1", unlocked: true, energyGoal: 150, x: 180, y: 460 },
       { name: "Nível 2", unlocked: false, energyGoal: 150, x: 385, y: 210 },
@@ -1049,11 +1165,13 @@ class LevelCompleteScene extends BaseScene {
       { name: "Nível 4", unlocked: false, energyGoal: 200, x: 650, y: 250 },
     ];
 
+    //Dar unlock do nível 1 ao 3
     if (data.level < levels.length) {
       levels[data.level].unlocked = true;
       localStorage.setItem("levels", JSON.stringify(levels));
     }
 
+    //No nível 4 não pode dar mais unlock a nada
     if (data.level < 4) {
       const nextLevelButton = this.add
         .text(400, 300, "Próximo Nível", this.applyFontStyle())
@@ -1070,6 +1188,7 @@ class LevelCompleteScene extends BaseScene {
       });
     }
 
+    //Botão para voltar para a escolha de níveis
     const backtoLevelsButton = this.add
       .text(400, 350, "Seleção de Níveis", this.applyFontStyle())
       .setOrigin(0.5)
@@ -1092,6 +1211,8 @@ class GameOverScene extends BaseScene {
   create(data) {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = true;
+
+    //Texto do ecrâ
     this.createBackground("bgInit", true);
     this.add
       .text(400, 100, "Game Over!", this.applyFontStyle("32px"))
@@ -1100,6 +1221,7 @@ class GameOverScene extends BaseScene {
       .text(400, 200, `Pontuação: ${data.score}`, this.applyFontStyle("24px"))
       .setOrigin(0.5);
 
+    //Botão de restart o nível que acabou de jogar
     const restartButton = this.add
       .text(400, 300, "Reiniciar", this.applyFontStyle())
       .setOrigin(0.5)
@@ -1113,6 +1235,7 @@ class GameOverScene extends BaseScene {
       });
     });
 
+    //Botão para voltar para a escolha de níveis
     const backtoLevelsButton = this.add
       .text(400, 350, "Seleção de Níveis", this.applyFontStyle())
       .setOrigin(0.5)
@@ -1126,6 +1249,7 @@ class GameOverScene extends BaseScene {
   }
 }
 
+//Configuração dos níveis, da janela do jogo, físicas e etcs
 const config = {
   type: Phaser.AUTO,
   width: 800,
@@ -1135,7 +1259,7 @@ const config = {
   scene: [
     PreloadScene,
     StartScene,
-    InstructionsScene,
+    ObjectiveScene,
     ControlosScene,
     DifficultySelectScene,
     OptionsSelectScene,
