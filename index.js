@@ -768,7 +768,7 @@ class GameScene extends BaseScene {
 
     //Texto e estilos para o mesmo
     this.pauseMenu = this.add.container(400, 300);
-    this.pauseMenu.add(this.add.rectangle(0, 0, 350, 250, 0x000000, 0.9));
+    this.pauseMenu.add(this.add.rectangle(0, 0, 800, 600, 0x000000, 1));
     this.pauseMenu.add(
       this.add
         .text(0, -70, "PAUSADO", this.applyFontStyle("32px"))
@@ -914,39 +914,42 @@ class GameScene extends BaseScene {
     //Ifs diferentes para não poder disparar
     if (this.isPaused || this.isGameOver || this.isMoving) return;
 
-    //"Angular" o spritesheet dependendo da posição do mouse e do player
-    const angle = Phaser.Math.Angle.Between(
-      this.player.x,
-      this.player.y,
-      pointer.x,
-      pointer.y
-    );
+    //Segundo if para não poder disparar se o jogador estiver a andar
+    if (this.playerState != "walk") {
+      //"Angular" o spritesheet dependendo da posição do mouse e do player
+      const angle = Phaser.Math.Angle.Between(
+        this.player.x,
+        this.player.y,
+        pointer.x,
+        pointer.y
+      );
 
-    const fireball = this.physics.add
-      .sprite(this.player.x, this.player.y, "fireball")
-      .setScale(0.5);
-    fireball.setRotation(angle);
-    fireball.play("fireball");
-    this.physics.moveTo(fireball, pointer.x, pointer.y, 600);
+      const fireball = this.physics.add
+        .sprite(this.player.x, this.player.y, "fireball")
+        .setScale(0.5);
+      fireball.setRotation(angle);
+      fireball.play("fireball");
+      this.physics.moveTo(fireball, pointer.x, pointer.y, 600);
 
-    //Se houver colisão entre fireball e obstáculo, ambos desaparecem
-    this.physics.add.collider(fireball, this.obstacles, (f, obstacle) => {
-      this.sound.play("collect");
-      obstacle.destroy();
-      f.destroy();
-      this.updateScore();
-    });
+      //Se houver colisão entre fireball e obstáculo, ambos desaparecem
+      this.physics.add.collider(fireball, this.obstacles, (f, obstacle) => {
+        this.sound.play("collect");
+        obstacle.destroy();
+        f.destroy();
+        this.updateScore();
+      });
 
-    this.player.anims.play("attack", true);
+      this.player.anims.play("attack", true);
 
-    //Animação de ataque acaba e volta a idle
-    this.player.once("animationcomplete", (animation) => {
-      if (animation.key === "attack") {
-        this.player.anims.play("idle", true);
-      }
-    });
+      //Animação de ataque acaba e volta a idle
+      this.player.once("animationcomplete", (animation) => {
+        if (animation.key === "attack") {
+          this.player.anims.play("idle", true);
+        }
+      });
 
-    this.shootSound.play({ volume: this.sound.volume });
+      this.shootSound.play({ volume: this.sound.volume });
+    }
   }
 
   //Update do score a cada obstáculo destruído
@@ -1055,9 +1058,6 @@ class GameScene extends BaseScene {
     const speed = 160;
     let newState = "idle";
     let isMoving = false;
-
-    //TODO: fazer com que a origin seja aplicada no walk
-    this.player.setOrigin(0.5, 0.4);
 
     //Movimentação para teclado
     //Esquerda
