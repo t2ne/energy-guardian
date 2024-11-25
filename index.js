@@ -75,17 +75,17 @@ class PreloadScene extends Phaser.Scene {
     this.load.image("level4", "assets/tiles/rock_tile.png");
 
     //Load de spritesheets do character
-    this.load.spritesheet("player1", "assets/character/1.png", {
+    this.load.spritesheet("player1", "assets/char/1.png", {
       frameWidth: 136,
       frameHeight: 170,
     });
-    this.load.spritesheet("player2", "assets/character/2.png", {
+    this.load.spritesheet("player2", "assets/char/2.png", {
       frameWidth: 136,
       frameHeight: 170,
     });
 
     //Load dos spritesheets do ataque e do obstáculo
-    this.load.spritesheet("fireball", "assets/character/fireball.png", {
+    this.load.spritesheet("fireball", "assets/char/fireball.png", {
       frameWidth: 121,
       frameHeight: 125,
     });
@@ -655,8 +655,16 @@ class LevelSelectScene extends BaseScene {
 class GameScene extends BaseScene {
   constructor() {
     super("GameScene");
+    //Inicialização das origens das animações
+    this.animationOrigins = {
+      walk: { x: 0.6, y: 0.4 },
+      idle: { x: 0.5, y: 0.5 },
+      attack: { x: 0.5, y: 0.5 },
+      dead: { x: 0.5, y: 0.2 },
+    };
   }
 
+  //Método de criação do jogo
   create(data) {
     this.input.keyboard.enabled = true;
     this.input.mouse.enabled = true;
@@ -676,7 +684,6 @@ class GameScene extends BaseScene {
     this.player = this.physics.add.sprite(400, 300, "player1");
     this.player.setCollideWorldBounds(true);
 
-    //TODO: MAYBE AQUI O SET ORIGIN DEVE SER
     const playerWidth = 40;
     const playerHeight = 120;
     this.player.body.setSize(playerWidth, playerHeight);
@@ -688,6 +695,7 @@ class GameScene extends BaseScene {
     //Iniciar o estado do player
     this.playerState = "idle";
     this.player.anims.play("idle", true);
+    this.updatePlayerOrigin();
 
     //Iniciar o jogo
     this.score = 0;
@@ -695,6 +703,9 @@ class GameScene extends BaseScene {
     this.energyGoal = energyGoal;
     this.timeLimit = 60;
     this.lives = 3;
+    this.isGameOver = false;
+    this.isPaused = false;
+    this.isMoving = false;
 
     //Setup dos cursor keys
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -706,8 +717,7 @@ class GameScene extends BaseScene {
       immovable: true,
     });
 
-    //Setup de colisões, o mesmo é um debugger
-    const collider = this.physics.add.overlap(
+    this.physics.add.overlap(
       this.player,
       this.obstacles,
       this.handleCollision,
@@ -722,7 +732,15 @@ class GameScene extends BaseScene {
     this.joyStickSetup();
   }
 
-  //Setup do Joystick
+  //Update da origin do jogador, feito para debug dos spritesheets
+  updatePlayerOrigin() {
+    const origin = this.animationOrigins[this.playerState];
+    if (origin) {
+      this.player.setOrigin(origin.x, origin.y);
+    }
+  }
+
+  //Setup para o Joystick
   joyStickSetup() {
     const joystickState = localStorage.getItem("joystick") === "true";
 
@@ -764,9 +782,6 @@ class GameScene extends BaseScene {
 
   //Menu de pausa
   setupPauseMenu() {
-    this.isPaused = false;
-
-    //Texto e estilos para o mesmo
     this.pauseMenu = this.add.container(400, 300);
     this.pauseMenu.add(this.add.rectangle(0, 0, 800, 600, 0x000000, 1));
     this.pauseMenu.add(
@@ -940,11 +955,13 @@ class GameScene extends BaseScene {
       });
 
       this.player.anims.play("attack", true);
+      this.updatePlayerOrigin();
 
       //Animação de ataque acaba e volta a idle
       this.player.once("animationcomplete", (animation) => {
         if (animation.key === "attack") {
           this.player.anims.play("idle", true);
+          this.updatePlayerOrigin();
         }
       });
 
@@ -991,7 +1008,6 @@ class GameScene extends BaseScene {
     //Se houver mais que 0 vidas
     if (this.lives > 0) {
       this.deadSound.play();
-      // Add visual feedback
       this.player.setTint(0xff0000);
       this.time.delayedCall(200, () => {
         this.player.clearTint();
@@ -1020,6 +1036,7 @@ class GameScene extends BaseScene {
 
   //Acabar o nível se não houverem mais vidas
   gameOver() {
+    this.isGameOver = true;
     this.timerEvent.remove();
     this.smokeEvent.remove();
     this.physics.pause();
@@ -1029,14 +1046,14 @@ class GameScene extends BaseScene {
     this.input.keyboard.enabled = false;
     this.input.mouse.enabled = false;
 
+    this.playerState = "dead";
     this.player.anims.play("dead");
+    this.updatePlayerOrigin();
 
     //Play da animação e mudança de scene
     this.player.on("animationcomplete", (animation) => {
       if (animation.key === "dead") {
-        //TODO: Fix desta origin, não funciona
-        this.player.setOrigin(0.4, 0.2);
-        this.time.delayedCall(-400, () => {
+        this.time.delayedCall(400, () => {
           this.scene.start("GameOverScene", {
             score: this.score,
             level: this.currentLevel,
@@ -1057,7 +1074,7 @@ class GameScene extends BaseScene {
 
     const speed = 160;
     let newState = "idle";
-    let isMoving = false;
+    this.isMoving = false;
 
     //Movimentação para teclado
     //Esquerda
@@ -1065,13 +1082,13 @@ class GameScene extends BaseScene {
       this.player.setVelocityX(-speed);
       this.player.flipX = true;
       newState = "walk";
-      isMoving = true;
+      this.isMoving = true;
       //Direita
     } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(speed);
       this.player.flipX = false;
       newState = "walk";
-      isMoving = true;
+      this.isMoving = true;
     } else {
       this.player.setVelocityX(0);
     }
@@ -1080,12 +1097,12 @@ class GameScene extends BaseScene {
     if (this.cursors.up.isDown) {
       this.player.setVelocityY(-speed);
       newState = "walk";
-      isMoving = true;
+      this.isMoving = true;
       //Baixo
     } else if (this.cursors.down.isDown) {
       this.player.setVelocityY(speed);
       newState = "walk";
-      isMoving = true;
+      this.isMoving = true;
     } else {
       this.player.setVelocityY(0);
     }
@@ -1097,25 +1114,25 @@ class GameScene extends BaseScene {
         this.player.setVelocityX(-speed);
         this.player.flipX = true;
         newState = "walk";
-        isMoving = true;
+        this.isMoving = true;
         //Direita
       } else if (this.joyStickCursorKeys.right.isDown) {
         this.player.setVelocityX(speed);
         this.player.flipX = false;
         newState = "walk";
-        isMoving = true;
+        this.isMoving = true;
       }
 
       //Cima
       if (this.joyStickCursorKeys.up.isDown) {
         this.player.setVelocityY(-speed);
         newState = "walk";
-        isMoving = true;
+        this.isMoving = true;
         //Baixo
       } else if (this.joyStickCursorKeys.down.isDown) {
         this.player.setVelocityY(speed);
         newState = "walk";
-        isMoving = true;
+        this.isMoving = true;
       }
     }
 
@@ -1126,12 +1143,14 @@ class GameScene extends BaseScene {
     ) {
       this.playerState = newState;
       this.player.anims.play(this.playerState, true);
+      this.updatePlayerOrigin();
 
       //Adicionar o listener da animação completa
       this.player.once("animationcomplete", (animation) => {
         if (animation.key === "walk") {
           this.playerState = "idle";
           this.player.anims.play("idle", true);
+          this.updatePlayerOrigin();
         }
       });
     }
