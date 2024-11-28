@@ -101,11 +101,22 @@ class PreloadScene extends Phaser.Scene {
     this.load.audio("shootSound", "assets/sounds/hurt.wav");
     this.load.audio("dead", "assets/sounds/explosion.wav");
 
-    //Load das músicas dde fundo
+    //Load das músicas de fundo
     this.load.audio("level1-song", "assets/music/level1.mp3");
     this.load.audio("level2-song", "assets/music/level2.mp3");
     this.load.audio("level3-song", "assets/music/level3.mp3");
     this.load.audio("level4-song", "assets/music/level4.mp3");
+
+    //Load dos sons do menu de pausa
+    this.load.audio("closePauseMenu", "assets/sounds/close_pausemenu.mp3");
+    this.load.audio("openPauseMenu", "assets/sounds/open_pausemenu.mp3");
+
+    //Load dos diferentes sons do painel solar
+    this.load.audio("solar_appear", "assets/sounds/solar_appear.mp3");
+    this.load.audio("solar_disappear", "assets/sounds/solar_disappear.mp3");
+    this.load.audio("solar_collect", "assets/sounds/solar_collect.mp3");
+
+    this.load.image("solar", "assets/etc/solarPanel.png");
 
     this.load.audio("ambient", "assets/music/bgMusic.mp3");
 
@@ -193,15 +204,6 @@ class PreloadScene extends Phaser.Scene {
         repeat: anim.repeat,
       });
     });
-
-    // this.player.on("animationupdate", (animation) => {
-    //   if (animation.key === "walk") {
-    //     this.player.setOrigin(0.5, 0.4);
-    //   } else if (animation.key === "dead") {
-    //     this.player.setOrigin(0.4, 0.2);
-    //   } else {
-    //   }
-    // });
   }
 
   //Aplicação da fonte utilizada no jogo
@@ -662,6 +664,8 @@ class GameScene extends BaseScene {
       attack: { x: 0.5, y: 0.5 },
       dead: { x: 0.5, y: 0.2 },
     };
+    this.lastFireballTime = 0;
+    this.fireballDelay = 500; // 0.5 seconds
   }
 
   //Método de criação do jogo
@@ -725,11 +729,33 @@ class GameScene extends BaseScene {
       this
     );
 
+    // Setup do grupo de painéis solares
+    this.solarPanels = this.physics.add.group({
+      allowGravity: false,
+      immovable: true,
+    });
+
+    this.physics.add.overlap(
+      this.player,
+      this.solarPanels,
+      this.collectSolarPanel,
+      null,
+      this
+    );
+
     this.createUI(level);
     this.initGame(difficulty);
     this.setupPauseMenu();
     this.setupAudio(level);
     this.joyStickSetup();
+
+    // Iniciar o spawn de painéis solares
+    this.time.addEvent({
+      delay: 8500, // 8.5 segundos
+      callback: this.spawnSolarPanel,
+      callbackScope: this,
+      loop: true,
+    });
   }
 
   //Update da origin do jogador, feito para debug dos spritesheets
@@ -778,6 +804,25 @@ class GameScene extends BaseScene {
     const sfxVolume = parseFloat(localStorage.getItem("sfxVolume")) || 0.5;
     this.shootSound = this.sound.add("shootSound", { volume: sfxVolume });
     this.deadSound = this.sound.add("dead", { volume: sfxVolume });
+
+    // Adicionar sons do painel solar
+    this.solarAppearSound = this.sound.add("solar_appear", {
+      volume: sfxVolume,
+    });
+    this.solarDisappearSound = this.sound.add("solar_disappear", {
+      volume: sfxVolume,
+    });
+    this.solarCollectSound = this.sound.add("solar_collect", {
+      volume: sfxVolume,
+    });
+
+    // Adicionar sons do menu de pausa
+    this.openPauseMenuSound = this.sound.add("openPauseMenu", {
+      volume: sfxVolume,
+    });
+    this.closePauseMenuSound = this.sound.add("closePauseMenu", {
+      volume: sfxVolume,
+    });
   }
 
   //Menu de pausa
@@ -816,12 +861,14 @@ class GameScene extends BaseScene {
       this.levelMusic.pause();
       this.smokeEvent.paused = true;
       this.timerEvent.paused = true;
+      this.openPauseMenuSound.play();
     } else {
       this.pauseMenu.setVisible(false);
       this.physics.resume();
       this.levelMusic.resume();
       this.smokeEvent.paused = false;
       this.timerEvent.paused = false;
+      this.closePauseMenuSound.play();
     }
   }
 
@@ -924,10 +971,46 @@ class GameScene extends BaseScene {
     smoke.play("smoke");
   }
 
+  // Método para spawnar painéis solares
+  spawnSolarPanel() {
+    if (this.isPaused) return;
+
+    const x = Phaser.Math.Between(100, 700);
+    const y = Phaser.Math.Between(100, 500);
+    const solarPanel = this.solarPanels.create(x, y, "solar");
+    solarPanel.setScale(1.2);
+
+    this.solarAppearSound.play();
+
+    // Remover o painel solar após 4 segundos se não for apanhado
+    this.time.delayedCall(4000, () => {
+      if (solarPanel.active) {
+        solarPanel.destroy();
+        this.solarDisappearSound.play();
+      }
+    });
+  }
+
+  // Método para apanhar painéis solares
+  collectSolarPanel(player, solarPanel) {
+    solarPanel.destroy();
+    this.solarCollectSound.play();
+    this.score += 15;
+    this.energy += 15;
+    this.scoreText.setText(`Pontuação: ${this.score}`);
+    this.updateProgressBar();
+    if (this.energy >= this.energyGoal) this.completeLevel();
+  }
+
   //Fireball lançada depois do ataque do jogador
   shootFireball(pointer) {
     //Ifs diferentes para não poder disparar
     if (this.isPaused || this.isGameOver || this.isMoving) return;
+
+    const currentTime = this.time.now;
+    if (currentTime - this.lastFireballTime < this.fireballDelay) {
+      return; // Não disparar se o delay não tiver passado
+    }
 
     //Segundo if para não poder disparar se o jogador estiver a andar
     if (this.playerState != "walk") {
@@ -966,6 +1049,8 @@ class GameScene extends BaseScene {
       });
 
       this.shootSound.play({ volume: this.sound.volume });
+
+      this.lastFireballTime = currentTime;
     }
   }
 
