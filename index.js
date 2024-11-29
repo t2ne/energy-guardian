@@ -72,7 +72,7 @@ class PreloadScene extends Phaser.Scene {
     this.load.image("level1", "assets/tiles/desert_tile.png");
     this.load.image("level2", "assets/tiles/snow_tile.png");
     this.load.image("level3", "assets/tiles/grass_tile.png");
-    this.load.image("level4", "assets/tiles/rock_tile.png");
+    this.load.image("level4", "assets/tiles/undead_tile.png");
 
     //Load de spritesheets do character
     this.load.spritesheet("player1", "assets/char/1.png", {
@@ -679,10 +679,17 @@ class GameScene extends BaseScene {
 
     //Setup do Background
     const bg = this.add.image(400, 300, `level${level}`);
-    const scaleX = this.cameras.main.width / bg.width;
-    const scaleY = this.cameras.main.height / bg.height;
-    const scale = Math.max(scaleX, scaleY);
-    bg.setScale(scale).setScrollFactor(0);
+
+    if (level === 4) {
+      bg.setScale(2);
+    } else {
+      const scaleX = this.cameras.main.width / bg.width;
+      const scaleY = this.cameras.main.height / bg.height;
+      const scale = Math.max(scaleX, scaleY);
+      bg.setScale(scale);
+    }
+
+    bg.setScrollFactor(0);
 
     //Setup do jogador (player)
     this.player = this.physics.add.sprite(400, 300, "player1");
