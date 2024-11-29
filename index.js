@@ -1299,6 +1299,18 @@ class LevelCompleteScene extends BaseScene {
       });
     }
 
+    //Texto custom para o fim do jogo
+    if (data.level === 4) {
+      this.add
+        .text(
+          400,
+          300,
+          "Parabéns! Concluíste o Jogo!",
+          this.applyFontStyle("24px")
+        )
+        .setOrigin(0.5);
+    }
+
     //Botão para voltar para a escolha de níveis
     const backtoLevelsButton = this.add
       .text(400, 350, "Seleção de Níveis", this.applyFontStyle())
