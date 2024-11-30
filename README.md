@@ -2,6 +2,10 @@
 
 A dynamic 2D action game built with Phaser 3 where players collect renewable energy while avoiding obstacles. Take on the role of an Energy Guardian and help restore the environment across multiple challenging levels.
 
+## 📍 Website
+
+This project can also be played in my website: https://t8ne.github.io/phaser/
+
 ## 🌟 Features
 
 - **Multiple Levels**: Progress through 4 unique environments with increasing difficulty
