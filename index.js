@@ -295,7 +295,7 @@ class StartScene extends BaseScene {
       .setOrigin(0.5);
 
     this.add
-      .text(630, 585, "António Rebelo - Nº28837", this.applyFontStyle("15px"))
+      .text(710, 585, "t8ne - 2024", this.applyFontStyle("15px"))
       .setOrigin(0.5);
 
     //Botões diferentes que o user pode clicar, redirige á sua scene devida
