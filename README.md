@@ -57,7 +57,7 @@ The game features multiple audio tracks:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/t8ne/EnergyGuardianAdventure.git
+   git clone https://github.com/t8ne/energy-guardian.git
    ```
 
 2. Install XAMPP (Windows) or MAMP (macOS) and run it
