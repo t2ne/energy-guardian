@@ -1598,7 +1598,7 @@ window.addEventListener("resize", updateGameSize);
 // Chamar updateGameSize inicialmente para configurar o tamanho correto
 updateGameSize();
 
-// Adicionar CSS para garantir que o contêiner do jogo seja responsivo
+// Adicionar CSS para garantir que o container do jogo seja responsivo
 const style = document.createElement("style");
 style.textContent = `
   #game-container {
