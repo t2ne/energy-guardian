@@ -4,7 +4,7 @@ A dynamic 2D action game built with Phaser 3 where players collect renewable ene
 
 ## 📍 Website
 
-This project can also be played in my website: https://t8ne.github.io/phaser/
+This project can also be played in my website: https://t8ne.github.io/energy-guardian/
 
 ## 🌟 Features
 
